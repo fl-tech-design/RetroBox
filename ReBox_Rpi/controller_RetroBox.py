@@ -1,23 +1,8 @@
 import serial
-from evdev import UInput, ecodes as e
 
 ser = serial.Serial('/dev/serial0', 9600)
-ui = UInput()
 
-buttons = {
-    'button_left_0': e.BTN_1,
-    'button_left_1': e.BTN_2,
-    'button_left_2': e.BTN_3,
-    'button_left_3': e.BTN_4,
-    'button_left_4': e.BTN_5,
-    'button_left_5': e.BTN_6,
-    'button_right_0': e.BTN_7,
-    'button_right_1': e.BTN_8,
-    'button_right_2': e.BTN_9,
-    'button_right_3': e.BTN_10,
-    'button_right_4': e.BTN_11,
-    'button_right_5': e.BTN_12,
-}
+
 
 sticks = {
     'xStick1': e.ABS_X,
