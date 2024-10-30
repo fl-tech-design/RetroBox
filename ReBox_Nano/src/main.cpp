@@ -1,104 +1,130 @@
 #include <Arduino.h>
 
-int buttonsleft[6] = {2, 11, 10, 12, 9, A1};
-int buttonsright[6] = {4, 7, 8, A3, A4, A5};
+// RGB-LED Pins
+const int led1Pins[3] = {3, 6, 11}; // Rot, Grün, Blau Pins für LED 1
+const int led2Pins[3] = {5, 9, 10}; // Rot, Grün, Blau Pins für LED 2
 
-// Vorherige Zustände der Buttons und Potis speichern
-int buttonsleft_prev[6] = {HIGH, HIGH, HIGH, HIGH, HIGH, HIGH};
-int buttonsright_prev[6] = {HIGH, HIGH, HIGH, HIGH, HIGH, HIGH};
+// Fade Einstellungen
+int brightness[3] = {0, 0, 0};    // Helligkeitswerte für R, G, B
+int fadeAmount = 5;               // Schrittgröße für das Fading
+unsigned long previousMillis = 0; // Speichert die Zeit des letzten Updates
+const long interval = 90;         // Zeitintervall für das Fading
+int currentColor = 0;             // Aktuelle Farbe (0 = Rot, 1 = Grün, 2 = Blau)
 
-int xSti_1_prev = 0;
-int ySti_1_prev = 0;
-int xSti_2_prev = 0;
-int ySti_2_prev = 0;
+// Ventilation
+const int venti_pin = 8;
 
-int threshold = 300; // Schwellenwert für Poti-Änderungen
+// Serial Data Transfer
+unsigned long lastSendTime = 0;        // Zeitstempel für letzte Übertragung
+const unsigned long sendInterval = 30; // Intervall in Millisekunden
+int serialData[4] = {0, 0, 0, 0};      // Array für Datenübertragung: Joystick-Werte und Ventilationsstatus
 
-int mapPotiValue(int value) {
-  // Mappe den Wert von 0-1023 auf -32768 bis 32767
-  return map(value, 0, 1023, 32767, -32768);
+void rgbDemo()
+{
+  unsigned long currentMillis = millis();
+
+  if (currentMillis - previousMillis >= interval)
+  {
+    previousMillis = currentMillis;
+
+    // Helligkeit für die aktuelle Farbe anpassen
+    brightness[currentColor] += fadeAmount;
+
+    // Wenn die Helligkeit den Grenzwert erreicht, Richtung umkehren
+    if (brightness[currentColor] <= 0 || brightness[currentColor] >= 255)
+    {
+      fadeAmount = -fadeAmount;
+
+      // Wenn die Farbe zurück auf 0 gedimmt wurde, zur nächsten Farbe wechseln
+      if (brightness[currentColor] <= 0)
+      {
+        currentColor = (currentColor + 1) % 3; // Zyklus Rot -> Grün -> Blau
+      }
+    }
+
+    // Helligkeit nur für die aktuelle Farbe anwenden, andere Farben ausschalten
+    for (int i = 0; i < 3; i++)
+    {
+      analogWrite(led1Pins[i], (i == currentColor) ? brightness[i] : 0);
+      analogWrite(led2Pins[i], (i == currentColor) ? brightness[i] : 0);
+    }
+  }
 }
 
-void setup() {
-  Serial.begin(9600); // UART starten
+void setRgbColor(int r, int g, int b)
+{
+  for (int i = 0; i < 3; i++)
+  {
+    analogWrite(led1Pins[i], i == 0 ? r : (i == 1 ? g : b));
+    analogWrite(led2Pins[i], i == 0 ? r : (i == 1 ? g : b));
+  }
+}
+// Analog-Stick-Werte lesen und zentrieren
+int readCenteredAnalog(int pin)
+{
+  int rawValue = analogRead(pin);
 
-  // Pin-Modi für Buttons links und rechts setzen
-  for (int i = 0; i < 6; i++) {
-    pinMode(buttonsleft[i], INPUT_PULLUP);
-    pinMode(buttonsright[i], INPUT_PULLUP);
+  // Falls Wert in Toleranzbereich liegt, auf 512 setzen
+  if (rawValue >= 460 && rawValue <= 580)
+  {
+    return 512;
+  }
+
+  // Wertebereich spiegeln (umkehren) bei Bedarf
+  return rawValue;
+}
+
+void readAnalogStick()
+{
+  // Joystick-Daten lesen und speichern
+  serialData[0] = 1023 - readCenteredAnalog(A2); // X-Achse
+  serialData[1] = 1023 - readCenteredAnalog(A3); // Y-Achse
+  serialData[2] = readCenteredAnalog(A1);        // Zweiter Stick X-Achse (falls benötigt)
+  serialData[3] = readCenteredAnalog(A0);        // Zweiter Stick Y-Achse (falls benötigt)
+}
+void readSerialData()
+{
+  if (Serial.available() > 0)
+  {
+    int receivedValue = Serial.parseInt(); // Liest eine Ganzzahl
+    digitalWrite(venti_pin, receivedValue);
+  }
+}
+void sendSerialData()
+{
+  unsigned long currentTime = millis();
+
+  // Prüfen, ob das Intervall erreicht ist
+  if (currentTime - lastSendTime >= sendInterval)
+  {
+    lastSendTime = currentTime; // Zeitstempel aktualisieren
+
+    // Alle Elemente von serialData senden, getrennt durch Komma
+    for (int i = 0; i < 4; i++)
+    {
+      Serial.print(serialData[i]);
+      if (i < 3)
+        Serial.print(","); // Trennzeichen hinzufügen, außer beim letzten Element
+    }
+    Serial.println(); // Neue Zeile für nächsten Datensatz
   }
 }
 
-void loop() {
-  // Lies und vergleiche die Buttons links
-  for (int i = 0; i < 6; i++) {
-    int state;
-
-    if (buttonsleft[i] >= A0) {
-      // Für analoge Pins, Wert als digitaler Zustand auswerten
-      state = analogRead(buttonsleft[i]) > 512 ? HIGH : LOW;
-    } else {
-      // Für normale digitale Pins
-      state = digitalRead(buttonsleft[i]);
-    }
-
-    if (state != buttonsleft_prev[i]) { // Nur senden, wenn sich der Zustand ändert
-      Serial.print("Button left ");
-      Serial.print(i);
-      Serial.print(": ");
-      Serial.println(state == LOW ? "PRESSED" : "RELEASED"); // Klarere Ausgabe
-      buttonsleft_prev[i] = state; // Zustand aktualisieren
-    }
+void setup()
+{
+  Serial.begin(9600);
+  for (int i = 0; i < 3; i++)
+  {
+    pinMode(led1Pins[i], OUTPUT);
+    pinMode(led2Pins[i], OUTPUT);
   }
+  pinMode(venti_pin, OUTPUT);
+}
 
-  // Lies und vergleiche die Potentiometer
-  int xSti_1 = mapPotiValue(analogRead(A0));
-  int ySti_1 = mapPotiValue(analogRead(A2));
-  int xSti_2 = mapPotiValue(analogRead(A4));
-  int ySti_2 = mapPotiValue(analogRead(A5));
-
-  if (abs(xSti_1 - xSti_1_prev) > threshold) {
-    Serial.print("X Stick 1: ");
-    Serial.println(xSti_1);
-    xSti_1_prev = xSti_1;
-  }
-
-  if (abs(ySti_1 - ySti_1_prev) > threshold) {
-    Serial.print("Y Stick 1: ");
-    Serial.println(ySti_1);
-    ySti_1_prev = ySti_1;
-  }
-
-  if (abs(xSti_2 - xSti_2_prev) > threshold) {
-    Serial.print("X Stick 2: ");
-    Serial.println(xSti_2);
-    xSti_2_prev = xSti_2;
-  }
-
-  if (abs(ySti_2 - ySti_2_prev) > threshold) {
-    Serial.print("Y Stick 2: ");
-    Serial.println(ySti_2);
-    ySti_2_prev = ySti_2;
-  }
-
-  // Lies und vergleiche die Buttons rechts
-  for (int i = 0; i < 6; i++) {
-    int state;
-
-    if (buttonsright[i] >= A0) {
-      // Für analoge Pins, Wert als digitaler Zustand auswerten
-      state = analogRead(buttonsright[i]) > 512 ? HIGH : LOW;
-    } else {
-      // Für normale digitale Pins
-      state = digitalRead(buttonsright[i]);
-    }
-
-    if (state != buttonsright_prev[i]) { // Nur senden, wenn sich der Zustand ändert
-      Serial.print("Button right ");
-      Serial.print(i);
-      Serial.print(": ");
-      Serial.println(state == LOW ? "PRESSED" : "RELEASED"); // Klarere Ausgabe
-      buttonsright_prev[i] = state; // Zustand aktualisieren
-    }
-  }
+void loop()
+{
+  rgbDemo(); // Falls RGB-Demo benötigt wird
+  readAnalogStick();
+  sendSerialData();
+  readSerialData();
 }

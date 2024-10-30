@@ -162,4 +162,4 @@ cython_debug/
 #.idea/
 
 # diverse user ignores
-.vscode/
+ReBox_Nano/.vscode
