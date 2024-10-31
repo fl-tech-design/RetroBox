@@ -9,15 +9,14 @@ buttons_state = [0] * len(button_pins)
 
 # Die letzten beiden Pins als Schließer, die anderen als Öffner setzen
 for i, pin in enumerate(button_pins):
-    if i < len(button_pins) - 2:  # Öffner mit Pull-Up-Widerstand
+    if i < len(button_pins) - 2:  # Öffner
         GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    else:  # Schließer mit Pull-Down-Widerstand
+    else:  # Schließer
         GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
-# Serielle Verbindung zum Arduino
 ser = serial.Serial("/dev/serial0", 9600)
 
-# Timer-Werte für Button-Abfrage
+# Initiale Timer-Werte für Button-Abfrage
 last_button_check = time.time()
 button_check_interval = 0.03
 
@@ -39,11 +38,11 @@ try:
             for i, pin in enumerate(button_pins):
                 buttons_state[i] = GPIO.input(pin)
                 
-                # Zustandsprüfung entsprechend der Pin-Typen
-                if i < len(button_pins) - 2:  # Öffner: LOW = gedrückt
-                    if buttons_state[i] == GPIO.LOW:
+                # Auswertung der Zustände
+                if i < len(button_pins) - 2:  # Öffner: HIGH wenn gedrückt
+                    if buttons_state[i] == GPIO.HIGH:
                         print(f"Button {i+1} (Öffner) gedrückt")
-                else:  # Schließer: HIGH = gedrückt
+                else:  # Schließer: HIGH wenn gedrückt
                     if buttons_state[i] == GPIO.HIGH:
                         print(f"Button {i+1} (Schließer) gedrückt")
 
