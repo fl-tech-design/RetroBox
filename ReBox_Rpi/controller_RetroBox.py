@@ -1,6 +1,7 @@
 import serial
 import RPi.GPIO as GPIO
 import time
+from evdev import UInput, ecodes as e
 
 # GPIO und serielle Einstellungen
 GPIO.setmode(GPIO.BCM)
@@ -16,9 +17,19 @@ for i, pin in enumerate(button_pins):
 
 ser = serial.Serial("/dev/serial0", 9600)
 
-# Initiale Timer-Werte für Button-Abfrage
-last_button_check = time.time()
-button_check_interval = 0.03
+# Definiere das virtuelle Gerät für EmulationStation
+ui = UInput({
+    e.EV_KEY: [
+        e.BTN_A, e.BTN_B, e.BTN_X, e.BTN_Y, e.BTN_TL, e.BTN_TR, 
+        e.BTN_SELECT, e.BTN_START, e.BTN_THUMBL, e.BTN_THUMBR,
+    ],
+    e.EV_ABS: [
+        (e.ABS_X, 0, 1023, 0, 0),  # xStick1
+        (e.ABS_Y, 0, 1023, 0, 0),  # yStick1
+        (e.ABS_RX, 0, 1023, 0, 0), # xStick2
+        (e.ABS_RY, 0, 1023, 0, 0), # yStick2
+    ],
+})
 
 try:
     while True:
@@ -28,25 +39,40 @@ try:
             if len(data) == 4:
                 xStick1, yStick1 = int(data[0]), int(data[1])
                 xStick2, yStick2 = int(data[2]), int(data[3])
-                print(f"Joystick: {xStick1}, {yStick1}, {xStick2}, {yStick2}")
+                
+                # Werte für EmulationStation vorbereiten
+                ui.write(e.EV_ABS, e.ABS_X, xStick1)
+                ui.write(e.EV_ABS, e.ABS_Y, yStick1)
+                ui.write(e.EV_ABS, e.ABS_RX, xStick2)
+                ui.write(e.EV_ABS, e.ABS_RY, yStick2)
+                ui.syn()
             else:
                 print(f"Fehler: Erwartete 4 Werte, aber empfangen: {len(data)}")
 
         # Button-Zustände abfragen
-        if time.time() - last_button_check > button_check_interval:
-            last_button_check = time.time()
-            for i, pin in enumerate(button_pins):
-                buttons_state[i] = GPIO.input(pin)
-                
-                # Auswertung der Zustände
-                if i < len(button_pins) - 2:  # Öffner: HIGH wenn gedrückt
-                    if buttons_state[i] == GPIO.HIGH:
-                        print(f"Button {i+1} (Öffner) gedrückt")
-                else:  # Schließer: HIGH wenn gedrückt
-                    if buttons_state[i] == GPIO.HIGH:
-                        print(f"Button {i+1} (Schließer) gedrückt")
+        for i, pin in enumerate(button_pins):
+            buttons_state[i] = GPIO.input(pin)
+            
+            # Tastenbehandlung für Öffner (0-9) und Schließer (letzte 2)
+            if i < len(button_pins) - 2:  # Öffner: LOW wenn gedrückt
+                if buttons_state[i] == GPIO.LOW:
+                    ui.write(e.EV_KEY, e.BTN_A + i, 1)  # Taste drücken
+                    print(f"Button {i+1} (Öffner) gedrückt")
+                else:
+                    ui.write(e.EV_KEY, e.BTN_A + i, 0)  # Taste loslassen
+            else:  # Schließer: HIGH wenn gedrückt
+                if buttons_state[i] == GPIO.HIGH:
+                    ui.write(e.EV_KEY, e.BTN_A + i, 1)  # Taste drücken
+                    print(f"Button {i+1} (Schließer) gedrückt")
+                else:
+                    ui.write(e.EV_KEY, e.BTN_A + i, 0)  # Taste loslassen
+            
+            ui.syn()  # Synchronisiert die Eingaben
+
+        time.sleep(0.03)
 
 except KeyboardInterrupt:
     pass
 finally:
     GPIO.cleanup()
+    ui.close()
