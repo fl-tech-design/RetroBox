@@ -10,9 +10,9 @@ buttons_state = [0] * len(button_pins)
 # Die letzten beiden Pins als Schließer, die anderen als Öffner setzen
 for i, pin in enumerate(button_pins):
     if i < len(button_pins) - 2:  # Öffner
-        GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    else:  # Schließer
         GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    else:  # Schließer
+        GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 ser = serial.Serial("/dev/serial0", 9600)
 
