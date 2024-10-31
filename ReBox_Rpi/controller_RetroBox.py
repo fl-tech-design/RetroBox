@@ -6,7 +6,7 @@ import time
 GPIO.setmode(GPIO.BCM)
 
 # Definiere die GPIO-Pins für die Buttons
-button_pins = [2, 3, 4, 17, 27, 22, 10, 9, 11, 5]  # Beispiel-Pins
+button_pins = [17, 18, 27, 22, 23, 16, 19, 20, 26, 21, 5, 6, 12, 13]  # Beispiel-Pins
 buttons_state = [0] * len(button_pins)  # Array zur Speicherung des Button-Zustands
 
 # Setze die Pins als Eingänge mit Pull-Up-Widerständen
