@@ -4,7 +4,7 @@ import time
 
 # GPIO und serielle Einstellungen
 GPIO.setmode(GPIO.BCM)
-button_pins = [17, 18, 27, 22, 23, 16, 19, 20, 26, 21, 5, 6, 12, 13]
+button_pins = [17, 18, 27, 22, 23, 16, 19, 20, 26, 21, 5, 6, 24, 13]
 buttons_state = [0] * len(button_pins)
 
 # Die letzten beiden Pins als Schließer, die anderen als Öffner setzen
@@ -12,7 +12,7 @@ for i, pin in enumerate(button_pins):
     if i < len(button_pins) - 2:  # Öffner
         GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
     else:  # Schließer
-        GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 ser = serial.Serial("/dev/serial0", 9600)
 
