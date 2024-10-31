@@ -40,7 +40,7 @@ try:
                 
                 # Auswertung der Zustände
                 if i < len(button_pins) - 2:  # Öffner: LOW wenn gedrückt
-                    if buttons_state[i] == GPIO.HIGH:
+                    if buttons_state[i] == GPIO.LOW:
                         print(f"Button {i+1} (Öffner) gedrückt")
                 else:  # Schließer: HIGH wenn gedrückt
                     if buttons_state[i] == GPIO.HIGH:
