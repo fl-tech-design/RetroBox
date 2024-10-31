@@ -5,18 +5,24 @@ import time
 # GPIO und serielle Einstellungen
 GPIO.setmode(GPIO.BCM)
 button_pins = [17, 18, 27, 22, 23, 16, 19, 20, 26, 21, 5, 6, 12, 13]
-for pin in button_pins:
-    GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+buttons_state = [0] * len(button_pins)
+
+# Die letzten beiden Pins als Schließer, die anderen als Öffner setzen
+for i, pin in enumerate(button_pins):
+    if i < len(button_pins) - 2:  # Öffner
+        GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    else:  # Schließer
+        GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+
 ser = serial.Serial("/dev/serial0", 9600)
 
-# Initiale Werte für den Button-Status und Timer
-buttons_state = [0] * len(button_pins)
+# Initiale Timer-Werte für Button-Abfrage
 last_button_check = time.time()
-button_check_interval = 0.03  # Interval für Buttonabfrage
+button_check_interval = 0.03
 
 try:
     while True:
-        # Joystick-Daten ohne Pause abfragen
+        # Joystick-Daten abfragen
         if ser.in_waiting > 0:
             data = ser.readline().decode().strip().split(",")
             if len(data) == 4:
@@ -26,13 +32,19 @@ try:
             else:
                 print(f"Fehler: Erwartete 4 Werte, aber empfangen: {len(data)}")
 
-        # Button-Status alle 30ms abfragen
+        # Button-Zustände abfragen
         if time.time() - last_button_check > button_check_interval:
             last_button_check = time.time()
             for i, pin in enumerate(button_pins):
                 buttons_state[i] = GPIO.input(pin)
-                if buttons_state[i] == GPIO.LOW:
-                    print(f"Button {i+1} gedrückt")
+                
+                # Auswertung der Zustände
+                if i < len(button_pins) - 2:  # Öffner: LOW wenn gedrückt
+                    if buttons_state[i] == GPIO.LOW:
+                        print(f"Button {i+1} (Öffner) gedrückt")
+                else:  # Schließer: HIGH wenn gedrückt
+                    if buttons_state[i] == GPIO.HIGH:
+                        print(f"Button {i+1} (Schließer) gedrückt")
 
 except KeyboardInterrupt:
     pass
