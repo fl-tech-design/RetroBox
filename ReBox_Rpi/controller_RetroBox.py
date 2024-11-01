@@ -77,11 +77,11 @@ try:
                         ui.write(e.EV_KEY, e.BTN_A + i, 0)
                     else:
                         ui.write(e.EV_KEY, e.BTN_A + i, 1)
-                        print(f"Button {i+1} (Öffner) gedrückt")
+                        #print(f"Button {i+1} (Öffner) gedrückt")
                 else:  # Closer
                     if buttons_state[i] == GPIO.LOW:
                         ui.write(e.EV_KEY, e.BTN_A + i, 1)
-                        print(f"Button {i+1} (Schließer) gedrückt")
+                        #print(f"Button {i+1} (Schließer) gedrückt")
                     else:
                         ui.write(e.EV_KEY, e.BTN_A + i, 0)
 
