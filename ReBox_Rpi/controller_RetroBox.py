@@ -18,30 +18,29 @@ for i, pin in enumerate(button_pins):
 # Serial setup
 ser = serial.Serial("/dev/serial0", 9600)
 
-# UInput setup
+# UInput setup for a Gamepad
 ui = UInput(
     {
         e.EV_ABS: [
-            (e.ABS_X, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
-            (e.ABS_Y, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
-            (e.ABS_RX, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
-            (e.ABS_RY, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
+            (e.ABS_X, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=15, resolution=0)),
+            (e.ABS_Y, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=15, resolution=0)),
+            (e.ABS_RX, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=15, resolution=0)),
+            (e.ABS_RY, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=15, resolution=0)),
         ],
         e.EV_KEY: [
-            e.KEY_1,
-            e.KEY_2,
-            e.KEY_3,
-            e.KEY_4,
-            e.KEY_5,
-            e.KEY_6,
-            e.KEY_7,
-            e.KEY_8,
-            e.KEY_9,
-            e.KEY_0,
-            e.KEY_Q,
-            e.KEY_W,
+            e.BTN_A,  # Button 1
+            e.BTN_B,  # Button 2
+            e.BTN_X,  # Button 3
+            e.BTN_Y,  # Button 4
+            e.BTN_TL,  # Button 5
+            e.BTN_TR,  # Button 6
+            e.BTN_SELECT,  # Button 7
+            e.BTN_START,  # Button 8
+            e.BTN_THUMBL,  # Button 9
+            e.BTN_THUMBR,  # Button 10
         ],
-    }
+    },
+    name="Virtual Gamepad"  # Name für EmulationStation, damit es als Gamepad erkannt wird
 )
 
 # Timing setup
@@ -73,14 +72,14 @@ try:
 
                 if i < len(button_pins) - 2:  # Opener
                     if buttons_state[i] == GPIO.LOW:
-                        ui.write(e.EV_KEY, e.KEY_1 + i, 0)
+                        ui.write(e.EV_KEY, e.BTN_A + i, 1)
                     else:
-                        ui.write(e.EV_KEY, e.KEY_1 + i, 1)
+                        ui.write(e.EV_KEY, e.BTN_A + i, 0)
                 else:  # Closer
                     if buttons_state[i] == GPIO.LOW:
-                        ui.write(e.EV_KEY, e.KEY_1 + i, 1)
+                        ui.write(e.EV_KEY, e.BTN_A + i, 1)
                     else:
-                        ui.write(e.EV_KEY, e.KEY_1 + i, 0)
+                        ui.write(e.EV_KEY, e.BTN_A + i, 0)
 
                 # Synchronize the button state updates
                 ui.syn()
