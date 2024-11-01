@@ -19,14 +19,13 @@ ser = serial.Serial("/dev/serial0", 9600)
 # Definiere das virtuelle Gerät für 
 ui = UInput({
     e.EV_ABS: [
-        (e.ABS_X, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0)),
-        (e.ABS_Y, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0)),
-        (e.ABS_RX, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0)),
-        (e.ABS_RY, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0))
+        (e.ABS_X, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
+        (e.ABS_Y, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
+        (e.ABS_RX, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
+        (e.ABS_RY, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0))
     ],
-    e.EV_KEY: [e.BTN_A, e.BTN_B, e.BTN_X, e.BTN_Y] + [e.BTN_TRIGGER + i for i in range(10)]
+    e.EV_KEY: [e.BTN_A, e.BTN_B, e.BTN_X, e.BTN_Y, e.BTN_TL, e.BTN_TR, e.BTN_SELECT, e.BTN_START, e.BTN_THUMBL, e.BTN_THUMBR]
 })
-
 
 try:
     while True:
