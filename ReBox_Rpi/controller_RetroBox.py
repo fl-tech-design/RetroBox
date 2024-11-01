@@ -43,7 +43,7 @@ try:
                 xStick2, yStick2 = int(data[2]), int(data[3])
 
                 # Debugging: Print joystick values
-                print(f"Joystick: {xStick1}, {yStick1}, {xStick2}, {yStick2}")
+                #print(f"Joystick: {xStick1}, {yStick1}, {xStick2}, {yStick2}")
 
                 # Send joystick values to the virtual controller
                 ui.write(e.EV_ABS, e.ABS_X, xStick1)
@@ -61,16 +61,16 @@ try:
                 
                 if i < len(button_pins) - 2:  # Opener
                     if buttons_state[i] == GPIO.LOW:
-                        print(f"Button {i+1} (Öffner) gedrückt")
-                        ui.write(e.EV_KEY, e.BTN_A + i, 1)
-                    else:
                         ui.write(e.EV_KEY, e.BTN_A + i, 0)
+                    else:
+                        ui.write(e.EV_KEY, e.BTN_A + i, 1)
+                        print(f"Button {i+1} (Öffner) gedrückt")
                 else:  # Closer
                     if buttons_state[i] == GPIO.HIGH:
-                        print(f"Button {i+1} (Schließer) gedrückt")
                         ui.write(e.EV_KEY, e.BTN_A + i, 1)
                     else:
                         ui.write(e.EV_KEY, e.BTN_A + i, 0)
+                        print(f"Button {i+1} (Schließer) gedrückt")
                 
                 # Synchronize the button state updates
                 ui.syn()
