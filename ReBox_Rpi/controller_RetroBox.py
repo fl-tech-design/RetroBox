@@ -5,7 +5,7 @@ from evdev import UInput, ecodes as e, AbsInfo
 
 # GPIO Setup
 GPIO.setmode(GPIO.BCM)
-button_pins = [23, 18, 27, 22, 16,17, 19, 20, 26, 21, 5, 6]
+button_pins = [23, 18, 27]
 buttons_state = [0] * len(button_pins)
 
 # Set up the pins as openers and closers
@@ -19,15 +19,28 @@ for i, pin in enumerate(button_pins):
 ser = serial.Serial("/dev/serial0", 9600)
 
 # UInput setup
-ui = UInput({
-    e.EV_ABS: [
-        (e.ABS_X, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
-        (e.ABS_Y, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
-        (e.ABS_RX, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
-        (e.ABS_RY, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0))
-    ],
-    e.EV_KEY: [e.BTN_A, e.BTN_B, e.BTN_X, e.BTN_Y, e.BTN_TL, e.BTN_TR, e.BTN_SELECT, e.BTN_START, e.BTN_THUMBL, e.BTN_THUMBR]
-})
+ui = UInput(
+    {
+        e.EV_ABS: [
+            (e.ABS_X, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
+            (e.ABS_Y, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
+            (e.ABS_RX, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
+            (e.ABS_RY, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
+        ],
+        e.EV_KEY: [
+            e.BTN_A,
+            e.BTN_B,
+            e.BTN_X,
+            e.BTN_Y,
+            e.BTN_TL,
+            e.BTN_TR,
+            e.BTN_SELECT,
+            e.BTN_START,
+            e.BTN_THUMBL,
+            e.BTN_THUMBR,
+        ],
+    }
+)
 
 # Timing setup
 last_button_check = time.monotonic()
@@ -43,7 +56,7 @@ try:
                 xStick2, yStick2 = int(data[2]), int(data[3])
 
                 # Debugging: Print joystick values
-                #print(f"Joystick: {xStick1}, {yStick1}, {xStick2}, {yStick2}")
+                # print(f"Joystick: {xStick1}, {yStick1}, {xStick2}, {yStick2}")
 
                 # Send joystick values to the virtual controller
                 ui.write(e.EV_ABS, e.ABS_X, xStick1)
@@ -58,7 +71,7 @@ try:
             last_button_check = current_time
             for i, pin in enumerate(button_pins):
                 buttons_state[i] = GPIO.input(pin)
-                
+
                 if i < len(button_pins) - 2:  # Opener
                     if buttons_state[i] == GPIO.LOW:
                         ui.write(e.EV_KEY, e.BTN_A + i, 0)
@@ -68,10 +81,10 @@ try:
                 else:  # Closer
                     if buttons_state[i] == GPIO.HIGH:
                         ui.write(e.EV_KEY, e.BTN_A + i, 1)
+                        print(f"Button {i+1} (Schließer) gedrückt")
                     else:
                         ui.write(e.EV_KEY, e.BTN_A + i, 0)
-                        print(f"Button {i+1} (Schließer) gedrückt")
-                
+
                 # Synchronize the button state updates
                 ui.syn()
 
