@@ -13,7 +13,7 @@ for i, pin in enumerate(button_pins):
     if i < len(button_pins) - 2:  # Opener
         GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     else:  # Closer
-        GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 # Serial setup
 ser = serial.Serial("/dev/serial0", 9600)
@@ -79,7 +79,7 @@ try:
                         ui.write(e.EV_KEY, e.BTN_A + i, 1)
                         print(f"Button {i+1} (Öffner) gedrückt")
                 else:  # Closer
-                    if buttons_state[i] == GPIO.HIGH:
+                    if buttons_state[i] == GPIO.LOW:
                         ui.write(e.EV_KEY, e.BTN_A + i, 1)
                         print(f"Button {i+1} (Schließer) gedrückt")
                     else:
