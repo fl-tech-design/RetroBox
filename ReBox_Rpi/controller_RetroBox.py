@@ -28,16 +28,18 @@ ui = UInput(
             (e.ABS_RY, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
         ],
         e.EV_KEY: [
-            e.BTN_A,
-            e.BTN_B,
-            e.BTN_X,
-            e.BTN_Y,
-            e.BTN_TL,
-            e.BTN_TR,
-            e.BTN_SELECT,
-            e.BTN_START,
-            e.BTN_THUMBL,
-            e.BTN_THUMBR,
+            e.KEY_1,
+            e.KEY_2,
+            e.KEY_3,
+            e.KEY_4,
+            e.KEY_5,
+            e.KEY_6,
+            e.KEY_7,
+            e.KEY_8,
+            e.KEY_9,
+            e.KEY_0,
+            e.KEY_Q,
+            e.KEY_W,
         ],
     }
 )
@@ -55,9 +57,6 @@ try:
                 xStick1, yStick1 = int(data[0]), int(data[1])
                 xStick2, yStick2 = int(data[2]), int(data[3])
 
-                # Debugging: Print joystick values
-                # print(f"Joystick: {xStick1}, {yStick1}, {xStick2}, {yStick2}")
-
                 # Send joystick values to the virtual controller
                 ui.write(e.EV_ABS, e.ABS_X, xStick1)
                 ui.write(e.EV_ABS, e.ABS_Y, yStick1)
@@ -74,16 +73,14 @@ try:
 
                 if i < len(button_pins) - 2:  # Opener
                     if buttons_state[i] == GPIO.LOW:
-                        ui.write(e.EV_KEY, e.BTN_A + i, 0)
+                        ui.write(e.EV_KEY, e.KEY_1 + i, 0)
                     else:
-                        ui.write(e.EV_KEY, e.BTN_A + i, 1)
-                        #print(f"Button {i+1} (Öffner) gedrückt")
+                        ui.write(e.EV_KEY, e.KEY_1 + i, 1)
                 else:  # Closer
                     if buttons_state[i] == GPIO.LOW:
-                        ui.write(e.EV_KEY, e.BTN_A + i, 1)
-                        #print(f"Button {i+1} (Schließer) gedrückt")
+                        ui.write(e.EV_KEY, e.KEY_1 + i, 1)
                     else:
-                        ui.write(e.EV_KEY, e.BTN_A + i, 0)
+                        ui.write(e.EV_KEY, e.KEY_1 + i, 0)
 
                 # Synchronize the button state updates
                 ui.syn()
