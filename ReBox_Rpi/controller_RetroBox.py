@@ -1,8 +1,7 @@
 import serial
 import RPi.GPIO as GPIO
 import time
-from evdev import UInput, ecodes as e
-
+from evdev import UInput, AbsInfo, ecodes as e
 # GPIO und serielle Einstellungen
 GPIO.setmode(GPIO.BCM)
 button_pins = [17, 18, 27, 22, 23, 16, 19, 20, 26, 21, 5, 6, 24, 13]
@@ -17,19 +16,17 @@ for i, pin in enumerate(button_pins):
 
 ser = serial.Serial("/dev/serial0", 9600)
 
-# Definiere das virtuelle Gerät für EmulationStation
+# Definiere das virtuelle Gerät für 
 ui = UInput({
-    e.EV_KEY: [
-        e.BTN_A, e.BTN_B, e.BTN_X, e.BTN_Y, e.BTN_TL, e.BTN_TR, 
-        e.BTN_SELECT, e.BTN_START, e.BTN_THUMBL, e.BTN_THUMBR,
-    ],
     e.EV_ABS: [
-        (e.ABS_X, 0, 1023, 0, 0),  # xStick1
-        (e.ABS_Y, 0, 1023, 0, 0),  # yStick1
-        (e.ABS_RX, 0, 1023, 0, 0), # xStick2
-        (e.ABS_RY, 0, 1023, 0, 0), # yStick2
+        (e.ABS_X, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0)),
+        (e.ABS_Y, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0)),
+        (e.ABS_RX, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0)),
+        (e.ABS_RY, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0))
     ],
+    e.EV_KEY: [e.BTN_A, e.BTN_B, e.BTN_X, e.BTN_Y] + [e.BTN_TRIGGER + i for i in range(10)]
 })
+
 
 try:
     while True:
