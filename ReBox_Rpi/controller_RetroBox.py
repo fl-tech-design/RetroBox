@@ -5,7 +5,7 @@ from evdev import UInput, ecodes as e, AbsInfo
 
 # GPIO Setup
 GPIO.setmode(GPIO.BCM)
-button_pins = [17, 18, 27, 22, 23, 16, 19, 20, 26, 21, 5, 6, 24, 13]
+button_pins = [23, 18, 27, 22, 16,17, 19, 20, 26, 21, 5, 6]
 buttons_state = [0] * len(button_pins)
 
 # Set up the pins as openers and closers
