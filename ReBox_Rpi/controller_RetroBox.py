@@ -30,8 +30,8 @@ ui = UInput({
 })
 
 # Timing setup
-last_button_check = time.time()
-button_check_interval = 0.03
+last_button_check = time.monotonic()
+button_check_interval = 0.03  # 30 ms
 
 try:
     while True:
@@ -42,7 +42,7 @@ try:
                 xStick1, yStick1 = int(data[0]), int(data[1])
                 xStick2, yStick2 = int(data[2]), int(data[3])
 
-                # Print joystick values for debugging
+                # Debugging: Print joystick values
                 print(f"Joystick: {xStick1}, {yStick1}, {xStick2}, {yStick2}")
 
                 # Send joystick values to the virtual controller
@@ -52,9 +52,10 @@ try:
                 ui.write(e.EV_ABS, e.ABS_RY, yStick2)
                 ui.syn()
 
-        # Check button states
-        if time.time() - last_button_check > button_check_interval:
-            last_button_check = time.time()
+        # Check button states every 30 ms
+        current_time = time.monotonic()
+        if current_time - last_button_check > button_check_interval:
+            last_button_check = current_time
             for i, pin in enumerate(button_pins):
                 buttons_state[i] = GPIO.input(pin)
                 
