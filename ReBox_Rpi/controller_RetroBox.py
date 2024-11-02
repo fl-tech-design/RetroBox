@@ -98,6 +98,7 @@ try:
 
             # CPU-Temperatur abrufen
             temp_str = os.popen("vcgencmd measure_temp").readline()
+            print("temp_str: ", temp_str)
             cpu_temp = float(temp_str.replace("temp=", "").replace("'C\n", ""))
 
             # Lüftersteuerung basierend auf Temperatur
