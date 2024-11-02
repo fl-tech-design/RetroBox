@@ -5,7 +5,7 @@ from evdev import UInput, ecodes as e, AbsInfo
 
 # GPIO Setup
 GPIO.setmode(GPIO.BCM)
-button_pins = [19, 26, 20, 16, 21, 17, 18, 27, 22, 23, 24, 5]  # letzte zwei sind Select und Start
+button_pins = [19, 26, 20, 16, 21, 17, 18, 27, 22, 23, 24, 5, 9, 11]  # 12 reguläre Buttons + 2 Lautstärke-Buttons
 buttons_state = [0] * len(button_pins)
 
 # Zuordnung der GPIO-Pins zu evdev-Key-Codes
@@ -21,20 +21,22 @@ button_map = {
     22: e.BTN_TRIGGER_HAPPY1,  # Button 9
     23: e.BTN_TRIGGER_HAPPY2,  # Button 10
     24: e.BTN_SELECT,    # Button 11 (Select)
-    5: e.BTN_START       # Button 12 (Start)
+    5: e.BTN_START,      # Button 12 (Start)
+    9: "VOLUME_UP",      # Lautstärke erhöhen
+    11: "VOLUME_DOWN"    # Lautstärke verringern
 }
 
 # Setup der Pins als Öffner oder Schließer
 for pin in button_pins:
-    if pin in [24, 5]:  # Letzte zwei als Schließer für Select und Start
+    if pin in [24, 5, 9, 11]:  # Schließer für Select, Start und Lautstärke
         GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    else:               # Andere als Öffner
+    else:                      # Andere als Öffner
         GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 # Serial Setup für Joystick
 ser = serial.Serial("/dev/serial0", 9600)
 
-# UInput Setup für Gamepad
+# UInput Setup für Gamepad und Lautstärke
 ui = UInput(
     {
         e.EV_ABS: [
@@ -49,6 +51,9 @@ ui = UInput(
             e.BTN_TRIGGER_HAPPY1, e.BTN_TRIGGER_HAPPY2,
             e.BTN_SELECT, e.BTN_START
         ],
+        e.EV_SND: [
+            e.SND_VOLUME  # Volume control support
+        ]
     },
     name="Virtual Gamepad"
 )
@@ -56,6 +61,7 @@ ui = UInput(
 # Timing Setup
 last_button_check = time.monotonic()
 button_check_interval = 0.03  # 30 ms
+volume_level = 50  # Beispiel Lautstärke-Startwert
 
 try:
     while True:
@@ -79,13 +85,21 @@ try:
             last_button_check = current_time
             for pin in button_pins:
                 state = GPIO.input(pin)
-                key_code = button_map[pin]
-                
-                # State basierend auf Öffner- oder Schließerlogik setzen
-                if pin in [24, 5]:  # Schließer (Select und Start)
-                    ui.write(e.EV_KEY, key_code, 1 if state == GPIO.LOW else 0)
-                else:               # Öffner
-                    ui.write(e.EV_KEY, key_code, 0 if state == GPIO.LOW else 1)
+                if pin in [9, 11]:  # Lautstärke erhöhen oder verringern
+                    if state == GPIO.LOW:
+                        if pin == 9:  # Lautstärke erhöhen
+                            volume_level = min(100, volume_level + 5)
+                        elif pin == 11:  # Lautstärke verringern
+                            volume_level = max(0, volume_level - 5)
+                        ui.write(e.EV_SND, e.SND_VOLUME, volume_level)
+
+                else:
+                    key_code = button_map[pin]
+                    # State basierend auf Öffner- oder Schließerlogik setzen
+                    if pin in [24, 5]:  # Schließer (Select und Start)
+                        ui.write(e.EV_KEY, key_code, 1 if state == GPIO.LOW else 0)
+                    else:               # Öffner
+                        ui.write(e.EV_KEY, key_code, 0 if state == GPIO.LOW else 1)
 
                 # Button-Status synchronisieren
                 ui.syn()
