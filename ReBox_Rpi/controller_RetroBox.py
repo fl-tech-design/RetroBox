@@ -61,9 +61,9 @@ button_check_interval = 0.03  # 30 ms
 # Funktion zur Lautstärkeregelung
 def adjust_volume(direction: str):
     if direction == "up":
-        subprocess.run(["amixer", "sset", "'Master'", "5%+"])
+        subprocess.run(["amixer", "sset", "'PCM'", "5%+"])
     elif direction == "down":
-        subprocess.run(["amixer", "sset", "'Master'", "5%-"])
+        subprocess.run(["amixer", "sset", "'PCM'", "5%-"])
 
 try:
     while True:
