@@ -82,14 +82,16 @@ void readAnalogStick()
   serialData[2] = readCenteredAnalog(A1);        // Zweiter Stick X-Achse (falls benötigt)
   serialData[3] = readCenteredAnalog(A0);        // Zweiter Stick Y-Achse (falls benötigt)
 }
-void readSerialData()
-{
-  if (Serial.available() > 0)
-  {
+void readSerialData() {
+  if (Serial.available() > 0) {
     int receivedValue = Serial.parseInt(); // Liest eine Ganzzahl
-    digitalWrite(venti_pin, receivedValue);
+    if (receivedValue == 0 || receivedValue == 1) { // Nur 0 oder 1 akzeptieren
+      digitalWrite(venti_pin, receivedValue);
+    }
+    Serial.flush();  // Optional: Puffer leeren, falls es mehrere Werte gibt
   }
 }
+
 void sendSerialData()
 {
   unsigned long currentTime = millis();
