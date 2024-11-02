@@ -2,32 +2,40 @@ import time
 import serial
 import RPi.GPIO as GPIO
 from evdev import UInput, ecodes as e, AbsInfo
-import subprocess  # Import für amixer
+import subprocess
 
 # GPIO Setup
 GPIO.setmode(GPIO.BCM)
-button_pins = [19, 26, 20, 16, 21, 17, 18, 27, 22, 23, 24, 5, 9, 11]  # letzte zwei sind Select, Start; neue Buttons 9 und 11 für Lautstärke
+button_pins = [19, 26, 20, 16, 21, 17, 18, 27, 22, 23, 24, 5]  # letzte zwei sind Select und Start
+volume_up_pin = 9
+volume_down_pin = 11
+button_pins.extend([volume_up_pin, volume_down_pin])
 buttons_state = [0] * len(button_pins)
 
 # Zuordnung der GPIO-Pins zu evdev-Key-Codes
 button_map = {
-    19: e.BTN_A,
-    26: e.BTN_B,
-    20: e.BTN_X,
-    16: e.BTN_Y,
-    21: e.BTN_TL,
-    17: e.BTN_TR,
-    18: e.BTN_THUMBL,
-    27: e.BTN_THUMBR,
-    22: e.BTN_TRIGGER_HAPPY1,
-    23: e.BTN_TRIGGER_HAPPY2,
-    24: e.BTN_SELECT,
-    5: e.BTN_START
+    19: e.BTN_A,         # Button 1
+    26: e.BTN_B,         # Button 2
+    20: e.BTN_X,         # Button 3
+    16: e.BTN_Y,         # Button 4
+    21: e.BTN_TL,        # Button 5
+    17: e.BTN_TR,        # Button 6
+    18: e.BTN_THUMBL,    # Button 7
+    27: e.BTN_THUMBR,    # Button 8
+    22: e.BTN_TRIGGER_HAPPY1,  # Button 9
+    23: e.BTN_TRIGGER_HAPPY2,  # Button 10
+    24: e.BTN_SELECT,    # Button 11 (Select)
+    5: e.BTN_START       # Button 12 (Start)
 }
+
+# Volume Control Setup für USB Audio
+def change_volume(direction):
+    command = ["amixer", "sset", "PCM", "2%+" if direction == "up" else "2%-"]
+    subprocess.run(command)
 
 # Setup der Pins als Öffner oder Schließer
 for pin in button_pins:
-    if pin in [24, 5]:  # Letzte zwei als Schließer für Select und Start
+    if pin in [24, 5, volume_up_pin, volume_down_pin]:  # Letzte zwei als Schließer für Select und Start
         GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     else:               # Andere als Öffner
         GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
@@ -57,13 +65,8 @@ ui = UInput(
 # Timing Setup
 last_button_check = time.monotonic()
 button_check_interval = 0.03  # 30 ms
-
-# Funktion zur Lautstärkeregelung
-def adjust_volume(direction: str):
-    if direction == "up":
-        subprocess.run(["amixer", "sset", "'PCM'", "5%+"])
-    elif direction == "down":
-        subprocess.run(["amixer", "sset", "'PCM'", "5%-"])
+volume_interval = 0.2  # Zeit zwischen Lautstärkeänderungen bei gehaltenem Button
+last_volume_change = time.monotonic()
 
 try:
     while True:
@@ -88,22 +91,24 @@ try:
             for pin in button_pins:
                 state = GPIO.input(pin)
                 
-                # Lautstärke erhöhen oder verringern
-                if pin == 9 and state == GPIO.LOW:  # Lauter
-                    adjust_volume("up")
-                elif pin == 11 and state == GPIO.LOW:  # Leiser
-                    adjust_volume("down")
-                elif pin in button_map:  # Andere Buttons an evdev senden
+                # Lautstärkeregelung für Vol Up und Vol Down
+                if pin == volume_up_pin and state == GPIO.LOW:
+                    if current_time - last_volume_change > volume_interval:
+                        change_volume("up")
+                        last_volume_change = current_time
+                elif pin == volume_down_pin and state == GPIO.LOW:
+                    if current_time - last_volume_change > volume_interval:
+                        change_volume("down")
+                        last_volume_change = current_time
+
+                # State basierend auf Öffner- oder Schließerlogik setzen
+                elif pin in button_map:  # Andere Buttons
                     key_code = button_map[pin]
-                    
-                    # State basierend auf Öffner- oder Schließerlogik setzen
                     if pin in [24, 5]:  # Schließer (Select und Start)
                         ui.write(e.EV_KEY, key_code, 1 if state == GPIO.LOW else 0)
                     else:               # Öffner
                         ui.write(e.EV_KEY, key_code, 0 if state == GPIO.LOW else 1)
-
-                # Button-Status synchronisieren
-                ui.syn()
+                    ui.syn()
 
 except KeyboardInterrupt:
     pass
