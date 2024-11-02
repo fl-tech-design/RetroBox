@@ -54,7 +54,7 @@ button_check_interval = 0.03  # 30 ms
 # CPU-Temperatur-Grenzwerte und Überwachungsintervall
 temp_high_threshold = 55.0  # °C
 temp_low_threshold = 49.0  # °C
-fan_check_interval = 1.0  # Sekunde
+fan_check_interval = 5.0  # Sekunde
 last_temp_check = time.monotonic()
 fan_state = 0  # Aktueller Zustand des Lüfters (0 = aus, 1 = an)
 
