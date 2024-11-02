@@ -2,12 +2,14 @@ import time
 import serial
 import RPi.GPIO as GPIO
 from evdev import UInput, ecodes as e, AbsInfo
-import os  # Für die CPU-Temperatur
+import subprocess
 
 # GPIO Setup
 GPIO.setmode(GPIO.BCM)
-button_pins = [19, 26, 20, 16, 21, 17, 18, 27, 22, 23, 24, 5]  # Letzte zwei sind Select und Start
-volume_up_pin, volume_down_pin = 9, 11
+button_pins = [19, 26, 20, 16, 21, 17, 18, 27, 22, 23, 24, 5]  # letzte zwei sind Select und Start
+volume_up_pin = 9
+volume_down_pin = 11
+button_pins.extend([volume_up_pin, volume_down_pin])
 buttons_state = [0] * len(button_pins)
 
 # Zuordnung der GPIO-Pins zu evdev-Key-Codes
@@ -26,11 +28,19 @@ button_map = {
     5: e.BTN_START       # Button 12 (Start)
 }
 
-# Setup der Pins als Öffner oder Schließer
-for pin in button_pins + [volume_up_pin, volume_down_pin]:
-    GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+# Volume Control Setup für USB Audio
+def change_volume(direction):
+    command = ["amixer", "sset", "PCM", "2%+" if direction == "up" else "2%-"]
+    subprocess.run(command)
 
-# Serial Setup für Joystick und Lüftersteuerung
+# Setup der Pins als Öffner oder Schließer
+for pin in button_pins:
+    if pin in [24, 5, volume_up_pin, volume_down_pin]:  # Letzte zwei als Schließer für Select und Start
+        GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    else:               # Andere als Öffner
+        GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+# Serial Setup für Joystick
 ser = serial.Serial("/dev/serial0", 9600)
 
 # UInput Setup für Gamepad
@@ -42,7 +52,12 @@ ui = UInput(
             (e.ABS_RX, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=15, resolution=0)),
             (e.ABS_RY, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=15, resolution=0)),
         ],
-        e.EV_KEY: list(button_map.values()),
+        e.EV_KEY: [
+            e.BTN_A, e.BTN_B, e.BTN_X, e.BTN_Y,
+            e.BTN_TL, e.BTN_TR, e.BTN_THUMBL, e.BTN_THUMBR,
+            e.BTN_TRIGGER_HAPPY1, e.BTN_TRIGGER_HAPPY2,
+            e.BTN_SELECT, e.BTN_START
+        ],
     },
     name="Virtual Gamepad"
 )
@@ -50,13 +65,8 @@ ui = UInput(
 # Timing Setup
 last_button_check = time.monotonic()
 button_check_interval = 0.03  # 30 ms
-
-# CPU-Temperatur-Grenzwerte und Überwachungsintervall
-temp_high_threshold = 55.0  # °C
-temp_low_threshold = 49.0  # °C
-fan_check_interval = 4.0  # Sekunde
-last_temp_check = time.monotonic()
-fan_state = 0  # Aktueller Zustand des Lüfters (0 = aus, 1 = an)
+volume_interval = 0.2  # Zeit zwischen Lautstärkeänderungen bei gehaltenem Button
+last_volume_change = time.monotonic()
 
 try:
     while True:
@@ -80,34 +90,25 @@ try:
             last_button_check = current_time
             for pin in button_pins:
                 state = GPIO.input(pin)
-                key_code = button_map[pin]
+                
+                # Lautstärkeregelung für Vol Up und Vol Down
+                if pin == volume_up_pin and state == GPIO.LOW:
+                    if current_time - last_volume_change > volume_interval:
+                        change_volume("up")
+                        last_volume_change = current_time
+                elif pin == volume_down_pin and state == GPIO.LOW:
+                    if current_time - last_volume_change > volume_interval:
+                        change_volume("down")
+                        last_volume_change = current_time
 
                 # State basierend auf Öffner- oder Schließerlogik setzen
-                ui.write(e.EV_KEY, key_code, 1 if state == GPIO.LOW else 0)
-                ui.syn()
-
-            # Lautstärkeregler
-            if GPIO.input(volume_up_pin) == GPIO.LOW:
-                os.system("amixer set PCM 2%+")
-            if GPIO.input(volume_down_pin) == GPIO.LOW:
-                os.system("amixer set PCM 2%-")
-
-        # CPU-Temperatur alle Sekunde überprüfen und Lüftersteuerung anpassen
-        if current_time - last_temp_check > fan_check_interval:
-            last_temp_check = current_time
-
-            # CPU-Temperatur abrufen
-            temp_str = os.popen("vcgencmd measure_temp").readline()
-            print("temp_str: ", temp_str)
-            cpu_temp = float(temp_str.replace("temp=", "").replace("'C\n", ""))
-
-            # Lüftersteuerung basierend auf Temperatur
-            if cpu_temp > temp_high_threshold and fan_state == 0:
-                ser.write(b"1")  # Lüfter einschalten
-                fan_state = 1
-            elif cpu_temp < temp_low_threshold and fan_state == 1:
-                ser.write(b"0")  # Lüfter ausschalten
-                fan_state = 0
+                elif pin in button_map:  # Andere Buttons
+                    key_code = button_map[pin]
+                    if pin in [24, 5]:  # Schließer (Select und Start)
+                        ui.write(e.EV_KEY, key_code, 1 if state == GPIO.LOW else 0)
+                    else:               # Öffner
+                        ui.write(e.EV_KEY, key_code, 0 if state == GPIO.LOW else 1)
+                    ui.syn()
 
 except KeyboardInterrupt:
     pass
