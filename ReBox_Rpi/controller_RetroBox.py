@@ -59,7 +59,7 @@ ui = UInput(
             e.BTN_SELECT, e.BTN_START
         ],
     },
-    name="Virtual Gamepad"
+    name="Controller RetroBox"
 )
 
 # Timing Setup
