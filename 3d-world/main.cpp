@@ -109,6 +109,9 @@ int main(int argc, char **argv)
         glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        // aktiviert Wireframemode.
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
         vertexBuffer.bind();
         glDrawArrays(GL_TRIANGLES, 0, numVertices);
         vertexBuffer.unbind();
@@ -127,7 +130,7 @@ int main(int argc, char **argv)
         uint64 counterElapsed = endCounter - lastCounter;
         delta = ((float32)counterElapsed) / (float32)perfCounterFrequency;
         uint32 FPS = (uint32)((float32)perfCounterFrequency / (float32)counterElapsed);
-        std::cout << "FPS: " << FPS << std::endl;
+        //std::cout << "FPS: " << FPS << std::endl;
         lastCounter = endCounter;
     }
 

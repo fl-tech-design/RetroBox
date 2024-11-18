@@ -163,3 +163,4 @@ cython_debug/
 
 # diverse user ignores
 ReBox_Nano/.vscode
+/3d-world/reboxOS
