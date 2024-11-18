@@ -21,6 +21,29 @@
 #include <fstream>
 #include <string>
 
+void openGLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam)
+{
+    std::cout << "[OpenGL error: ]" << message << std::endl;
+}
+#ifdef _DEBUG
+
+void _GLGetError(const char *file, int line, const char *call)
+{
+    while (GLenum error = glGetError())
+    {
+        std::cout << "[OpenGL Error] " << glewGetErrorString(error) << " in " << file << ":" << line << " Call: " << call << std::endl;
+    }
+}
+
+#define GLCALL(call) \
+    call;            \
+    _GLGetError(__FILE__, __LINE__, #call)
+
+#else
+
+#define GLCALL(call) call
+
+#endif
 bool isRaspberryPi()
 {
     std::ifstream file("/proc/cpuinfo");
@@ -49,6 +72,7 @@ std::string getShaderPath(const std::string &shaderType)
     return "shaders/" + shaderType; // Standardpfad für Nicht-Linux-Systeme
 }
 #endif
+
 int main(int argc, char **argv)
 {
     SDL_Window *window;
@@ -61,6 +85,9 @@ int main(int argc, char **argv)
     SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
+#ifdef _DEBUG
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+#endif
     uint32 flags = SDL_WINDOW_OPENGL; // | SDL_WINDOW_FULLSCREEN_DESKTOP;
 
     window = SDL_CreateWindow("C++ reboxOS", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 480, flags);
@@ -74,6 +101,12 @@ int main(int argc, char **argv)
         return -1;
     }
     std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
+
+#ifdef _DEBUG
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDebugMessageCallback(openGLDebugCallback, 0);
+#endif
 
     Vertex vertices[] = {
         Vertex{-0.5f, -0.5f, 0.0f,
@@ -114,18 +147,29 @@ int main(int argc, char **argv)
     uint64 lastCounter = SDL_GetPerformanceCounter();
     float32 delta = 0.0f;
 
+    int colorUniformLocation = glGetUniformLocation(shader.getShaderId(), "u_color");
+    if (!colorUniformLocation != -1)
+    {
+        GLCALL(glUniform4f(colorUniformLocation, 1.0f, 0.0f, 1.0f, 1.0f));
+    }
+
+    // aktiviert Wireframemode.
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    float time = 0.0f;
     bool close = false;
     while (!close)
     {
         glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // aktiviert Wireframemode.
-        // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
+        time += delta;
+        if (!colorUniformLocation != -1)
+        {
+            GLCALL(glUniform4f(colorUniformLocation, sinf(time) * sinf(time), 0.0f, 1.0f, 1.0f));
+        }
         vertexBuffer.bind();
         indexBuffer.bind();
-        glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+        GLCALL(glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0));
         indexBuffer.unbind();
         vertexBuffer.unbind();
 

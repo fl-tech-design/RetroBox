@@ -5,7 +5,7 @@ cd "$(dirname "$0")"
 
 # Führe cmake und make aus
 echo "Programm wird kompiliert..."
-g++ -g -std=c++11 main.cpp shader.cpp -o reboxOS -lGL -lSDL2 -lGLEW
+g++ -g -std=c++11 main.cpp shader.cpp -o reboxOS -D _DEBUG -lGL -lSDL2 -lGLEW
 
 # Erfolgsmeldung
 if [ $? -eq 0 ]; then
