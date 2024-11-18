@@ -2,11 +2,17 @@
 
 precision mediump float;  // Präzision für Fließkommawerte festlegen
 
-in vec4 v_color;    // Eingabefarbe vom Vertex-Shader
+// Eingabefarbe vom Vertex-Shader
+in vec4 v_color;
 
-out vec4 f_color;   // Ausgabefarbe des Fragment-Shaders, bleibt bei f_color
+// Ausgabefarbe des Fragment-Shaders
+out vec4 f_color;
+
+// Uniform-Variable für eine globale Farbe
+uniform vec4 u_color;
 
 void main()
 {
-    f_color = v_color;  // Die Farbe vom Vertex-Shader direkt an den Output weitergeben
+    // Verwende die Uniform-Farbe u_color als Ausgabe
+    f_color = u_color;
 }

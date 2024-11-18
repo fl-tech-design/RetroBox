@@ -147,14 +147,16 @@ int main(int argc, char **argv)
     uint64 lastCounter = SDL_GetPerformanceCounter();
     float32 delta = 0.0f;
 
+    // Uniform Location abrufen
     int colorUniformLocation = glGetUniformLocation(shader.getShaderId(), "u_color");
-    if (!colorUniformLocation != -1)
+
+    // Prüfen ob Uniform korrekt geladen wurde
+    if (colorUniformLocation != -1)
     {
+        // Initiale Farbe setzen
         GLCALL(glUniform4f(colorUniformLocation, 1.0f, 0.0f, 1.0f, 1.0f));
     }
 
-    // aktiviert Wireframemode.
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     float time = 0.0f;
     bool close = false;
     while (!close)
@@ -163,10 +165,13 @@ int main(int argc, char **argv)
         glClear(GL_COLOR_BUFFER_BIT);
 
         time += delta;
-        if (!colorUniformLocation != -1)
+
+        // Dynamische Farbänderung
+        if (colorUniformLocation != -1)
         {
             GLCALL(glUniform4f(colorUniformLocation, sinf(time) * sinf(time), 0.0f, 1.0f, 1.0f));
         }
+
         vertexBuffer.bind();
         indexBuffer.bind();
         GLCALL(glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0));
@@ -183,6 +188,7 @@ int main(int argc, char **argv)
                 close = true;
             }
         }
+
         uint64 endCounter = SDL_GetPerformanceCounter();
         uint64 counterElapsed = endCounter - lastCounter;
         delta = ((float32)counterElapsed) / (float32)perfCounterFrequency;
