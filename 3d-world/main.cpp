@@ -73,9 +73,12 @@ int main(int argc, char **argv)
     std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
 
     Vertex vertices[] = {
-        Vertex{-0.5f, -0.5f, 0.0f},
-        Vertex{0.0f, 0.5f, 0.0f},
-        Vertex{0.5f, -0.5f, 0.0f},
+        Vertex{-0.5f, -0.5f, 0.0f,
+               1.0f, 0.0f, 0.0f, 1.0f},
+        Vertex{0.0f, 0.5f, 0.0f,
+               0.0f, 1.0f, 0.0f, 1.0f},
+        Vertex{0.5f, -0.5f, 0.0f,
+               0.0f, 0.0f, 1.0f, 1.0f},
     };
     uint32 numVertices = 3;
 
