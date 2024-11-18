@@ -115,7 +115,7 @@ int main(int argc, char **argv)
         // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
         vertexBuffer.bind();
-        glDrawArrays(GL_LINE_STRIP, 0, numVertices);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, numVertices);
         vertexBuffer.unbind();
 
         SDL_GL_SwapWindow(window);
