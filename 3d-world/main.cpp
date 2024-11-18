@@ -60,7 +60,7 @@ int main(int argc, char **argv)
     SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-    uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP;
+    uint32 flags = SDL_WINDOW_OPENGL; // | SDL_WINDOW_FULLSCREEN_DESKTOP;
 
     window = SDL_CreateWindow("C++ reboxOS", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 480, flags);
     SDL_GLContext glContext = SDL_GL_CreateContext(window);
@@ -99,6 +99,10 @@ int main(int argc, char **argv)
     Shader shader(vertexShaderPath.c_str(), fragmentShaderPath.c_str());
     shader.bind();
 
+    uint64 perfCounterFrequency = SDL_GetPerformanceFrequency();
+    uint64 lastCounter = SDL_GetPerformanceCounter();
+    float32 delta = 0.0f;
+
     bool close = false;
     while (!close)
     {
@@ -119,6 +123,12 @@ int main(int argc, char **argv)
                 close = true;
             }
         }
+        uint64 endCounter = SDL_GetPerformanceCounter();
+        uint64 counterElapsed = endCounter - lastCounter;
+        delta = ((float32)counterElapsed) / (float32)perfCounterFrequency;
+        uint32 FPS = (uint32)((float32)perfCounterFrequency / (float32)counterElapsed);
+        std::cout << "FPS: " << FPS << std::endl;
+        lastCounter = endCounter;
     }
 
     return 0;
