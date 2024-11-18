@@ -3,6 +3,9 @@
 #include <GL/glew.h>
 #define SDL_MAIN_HANDLED
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "libs/stb_image.h"
+
 #ifdef _WIN32
 #include <SDL.h>
 #pragma comment(lib, "SDL2.lib")
@@ -88,7 +91,7 @@ int main(int argc, char **argv)
 #ifdef _DEBUG
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 #endif
-    uint32 flags = SDL_WINDOW_OPENGL; // | SDL_WINDOW_FULLSCREEN_DESKTOP;
+    uint32 flags = SDL_WINDOW_OPENGL; // | SDL_WINDOW_FULLSCREEN;
 
     window = SDL_CreateWindow("C++ reboxOS", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 480, flags);
     SDL_GLContext glContext = SDL_GL_CreateContext(window);
@@ -110,12 +113,16 @@ int main(int argc, char **argv)
 
     Vertex vertices[] = {
         Vertex{-0.5f, -0.5f, 0.0f,
+               0.0f, 0.0f,
                1.0f, 0.0f, 0.0f, 1.0f},
         Vertex{-0.5f, 0.5f, 0.0f,
-               0.0f, 1.0f, 0.0f, 1.0f},
+               0.0f, 1.0f,
+               0.0, 1.0f, 0.0f, 1.0f},
         Vertex{0.5f, -0.5f, 0.0f,
+               1.0f, 0.0f,
                0.0f, 0.0f, 1.0f, 1.0f},
         Vertex{0.5f, 0.5f, 0.0f,
+               1.0f, 1.0f,
                1.0f, 0.0f, 0.0f, 1.0f},
     };
     uint32 numVertices = 4;
@@ -123,13 +130,35 @@ int main(int argc, char **argv)
     uint32 indices[] = {
         0, 1, 2,
         1, 2, 3};
-
     uint32 numIndices = 6;
 
     IndexBuffer indexBuffer(indices, numIndices, sizeof(indices[0]));
 
     VertexBuffer vertexBuffer(vertices, numVertices);
     vertexBuffer.unbind();
+
+    int32 textureWidth = 0;
+    int32 textureHeight = 0;
+    int32 bitsPerPixel = 0;
+    stbi_set_flip_vertically_on_load(true);
+    auto textureBuffer = stbi_load("graphics/logo.png", &textureWidth, &textureHeight, &bitsPerPixel, 4);
+
+    GLuint textureId;
+    GLCALL(glGenTextures(1, &textureId));
+    GLCALL(glBindTexture(GL_TEXTURE_2D, textureId));
+
+    GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+    GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+
+    GLCALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, textureWidth, textureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureBuffer));
+    GLCALL(glBindTexture(GL_TEXTURE_2D, 0));
+
+    if (textureBuffer)
+    {
+        stbi_image_free(textureBuffer);
+    }
 
     // Platform-spezifische Shader-Dateipfade holen
     std::string vertexShaderPath = getShaderPath("basic.vs");
@@ -147,33 +176,39 @@ int main(int argc, char **argv)
     uint64 lastCounter = SDL_GetPerformanceCounter();
     float32 delta = 0.0f;
 
-    // Uniform Location abrufen
-    int colorUniformLocation = glGetUniformLocation(shader.getShaderId(), "u_color");
-
-    // Prüfen ob Uniform korrekt geladen wurde
-    if (colorUniformLocation != -1)
+    int colorUniformLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_color"));
+    if (!colorUniformLocation != -1)
     {
-        // Initiale Farbe setzen
         GLCALL(glUniform4f(colorUniformLocation, 1.0f, 0.0f, 1.0f, 1.0f));
     }
 
+    int textureUniformLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_texture"));
+    if (!textureUniformLocation != -1)
+    {
+        GLCALL(glUniform1i(textureUniformLocation, 0));
+    }
+
+    // Wireframe
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
     float time = 0.0f;
     bool close = false;
+
     while (!close)
     {
-        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+        glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-
         time += delta;
 
-        // Dynamische Farbänderung
-        if (colorUniformLocation != -1)
+        if (!colorUniformLocation != -1)
         {
             GLCALL(glUniform4f(colorUniformLocation, sinf(time) * sinf(time), 0.0f, 1.0f, 1.0f));
         }
 
         vertexBuffer.bind();
         indexBuffer.bind();
+        GLCALL(glActiveTexture(GL_TEXTURE0));
+        GLCALL(glBindTexture(GL_TEXTURE_2D, textureId));
         GLCALL(glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0));
         indexBuffer.unbind();
         vertexBuffer.unbind();
@@ -193,9 +228,10 @@ int main(int argc, char **argv)
         uint64 counterElapsed = endCounter - lastCounter;
         delta = ((float32)counterElapsed) / (float32)perfCounterFrequency;
         uint32 FPS = (uint32)((float32)perfCounterFrequency / (float32)counterElapsed);
-        // std::cout << "FPS: " << FPS << std::endl;
         lastCounter = endCounter;
     }
+
+    GLCALL(glDeleteTextures(1, &textureId));
 
     return 0;
 }
