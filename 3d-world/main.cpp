@@ -12,9 +12,25 @@
 #include <SDL2/SDL.h>
 #endif
 
+#include <string>
+
 #include "defines.h"
 #include "vertex_buffer.h"
 #include "shader.h"
+
+// Funktion, um den Shader-Pfad basierend auf der Plattform auszuwählen
+std::string getShaderPath(const std::string &shaderType)
+{
+#ifdef __linux__                        // Falls das Programm auf einem Linux-System läuft
+#ifdef RASPBIAN                         // Für Raspberry Pi spezifisch
+    return "shaders_rpi/" + shaderType; // Pfad für Raspberry Pi
+#else
+    return "shaders/" + shaderType; // Standardpfad für andere Linux-Systeme
+#endif
+#else
+    return "shaders/" + shaderType; // Standardpfad für Nicht-Linux-Systeme
+#endif
+}
 
 int main(int argc, char **argv)
 {
@@ -50,9 +66,17 @@ int main(int argc, char **argv)
     VertexBuffer vertexBuffer(vertices, numVertices);
     vertexBuffer.unbind();
 
-    Shader shader("shaders/basic.vs", "shaders/basic.fs");
-    shader.bind();
+    // Platform-spezifische Shader-Dateipfade holen
+    std::string vertexShaderPath = getShaderPath("basic.vs");
+    std::string fragmentShaderPath = getShaderPath("basic.fs");
 
+    // Ausgabe der Shader-Pfade
+    std::cout << "Vertex Shader Path: " << vertexShaderPath << std::endl;
+    std::cout << "Fragment Shader Path: " << fragmentShaderPath << std::endl;
+
+    // Shader laden
+    Shader shader(vertexShaderPath.c_str(), fragmentShaderPath.c_str());
+    shader.bind();
 
     bool close = false;
     while (!close)
@@ -63,7 +87,6 @@ int main(int argc, char **argv)
         vertexBuffer.bind();
         glDrawArrays(GL_TRIANGLES, 0, numVertices);
         vertexBuffer.unbind();
-
 
         SDL_GL_SwapWindow(window);
 
