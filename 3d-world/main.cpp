@@ -12,26 +12,42 @@
 #include <SDL2/SDL.h>
 #endif
 
-#include <string>
-
 #include "defines.h"
 #include "vertex_buffer.h"
 #include "shader.h"
 
-// Funktion, um den Shader-Pfad basierend auf der Plattform auszuwählen
-std::string getShaderPath(const std::string &shaderType)
+#ifdef __linux__
+#include <fstream>
+#include <string>
+
+bool isRaspberryPi()
 {
-#ifdef __linux__                        // Falls das Programm auf einem Linux-System läuft
-#ifdef RASPBIAN                         // Für Raspberry Pi spezifisch
-    return "shaders_rpi/" + shaderType; // Pfad für Raspberry Pi
-#else
-    return "shaders/" + shaderType; // Standardpfad für andere Linux-Systeme
-#endif
-#else
-    return "shaders/" + shaderType; // Standardpfad für Nicht-Linux-Systeme
-#endif
+    std::ifstream file("/proc/cpuinfo");
+    std::string line;
+    while (std::getline(file, line))
+    {
+        if (line.find("Raspberry Pi") != std::string::npos)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
+std::string getShaderPath(const std::string &shaderType)
+{
+    if (isRaspberryPi())
+    {
+        return "shaders_rpi/" + shaderType; // Raspberry Pi spezifischer Pfad
+    }
+    return "shaders/" + shaderType; // Standardpfad
+}
+#else
+std::string getShaderPath(const std::string &shaderType)
+{
+    return "shaders/" + shaderType; // Standardpfad für Nicht-Linux-Systeme
+}
+#endif
 int main(int argc, char **argv)
 {
     SDL_Window *window;
