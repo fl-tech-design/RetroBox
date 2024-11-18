@@ -83,12 +83,8 @@ int main(int argc, char **argv)
                0.0f, 0.0f, 1.0f, 1.0f},
         Vertex{0.5f, 0.5f, 0.0f,
                1.0f, 0.0f, 0.0f, 1.0f},
-        Vertex{-0.5f, 0.5f, 0.0f,
-               0.0f, 1.0f, 0.0f, 1.0f},
-        Vertex{0.5f, -0.5f, 0.0f,
-               0.0f, 0.0f, 1.0f, 1.0f},
     };
-    uint32 numVertices = 6;
+    uint32 numVertices = 4;
 
     VertexBuffer vertexBuffer(vertices, numVertices);
     vertexBuffer.unbind();
@@ -116,10 +112,10 @@ int main(int argc, char **argv)
         glClear(GL_COLOR_BUFFER_BIT);
 
         // aktiviert Wireframemode.
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
         vertexBuffer.bind();
-        glDrawArrays(GL_TRIANGLES, 0, numVertices);
+        glDrawArrays(GL_LINE_STRIP, 0, numVertices);
         vertexBuffer.unbind();
 
         SDL_GL_SwapWindow(window);
