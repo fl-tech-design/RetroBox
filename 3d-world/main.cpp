@@ -112,16 +112,16 @@ int main(int argc, char **argv)
 #endif
 
     Vertex vertices[] = {
-        Vertex{-0.5f, -0.5f, 0.0f,
+        Vertex{-0.9f, -0.9f, 0.0f,
                0.0f, 0.0f,
                1.0f, 0.0f, 0.0f, 1.0f},
-        Vertex{-0.5f, 0.5f, 0.0f,
+        Vertex{-0.9f, 0.9f, 0.0f,
                0.0f, 1.0f,
                0.0, 1.0f, 0.0f, 1.0f},
-        Vertex{0.5f, -0.5f, 0.0f,
+        Vertex{0.9f, -0.9f, 0.0f,
                1.0f, 0.0f,
                0.0f, 0.0f, 1.0f, 1.0f},
-        Vertex{0.5f, 0.5f, 0.0f,
+        Vertex{0.9f, 0.9f, 0.0f,
                1.0f, 1.0f,
                1.0f, 0.0f, 0.0f, 1.0f},
     };
@@ -196,7 +196,7 @@ int main(int argc, char **argv)
 
     while (!close)
     {
-        glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
+        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         time += delta;
 
