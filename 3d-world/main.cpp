@@ -124,7 +124,7 @@ int main(int argc, char **argv)
     std::vector<uint32> indices;
     uint64 numIndices = 0;
 
-    std::ifstream input = std::ifstream("models/monkey.bmf", std::ios::in | std::ios::binary);
+    std::ifstream input = std::ifstream("models/cube.bmf", std::ios::in | std::ios::binary);
     if (!input.is_open())
     {
         std::cout << "Error reading model file" << std::endl;
@@ -152,9 +152,9 @@ int main(int argc, char **argv)
         indices.push_back(index);
     }
 
-	IndexBuffer indexBuffer(indices.data(), numIndices, sizeof(indices[0]));
+    IndexBuffer indexBuffer(indices.data(), numIndices, sizeof(indices[0]));
 
-	VertexBuffer vertexBuffer(vertices.data(), numVertices);
+    VertexBuffer vertexBuffer(vertices.data(), numVertices);
     vertexBuffer.unbind();
 
     // Platform-spezifische Shader-Dateipfade holen
@@ -230,6 +230,9 @@ int main(int argc, char **argv)
                 case SDLK_LSHIFT:
                     buttonShift = true;
                     break;
+                case SDLK_ESCAPE:
+                    SDL_SetRelativeMouseMode(SDL_FALSE);
+                    break;
                 }
             }
             else if (event.type == SDL_KEYUP)
@@ -258,7 +261,17 @@ int main(int argc, char **argv)
             }
             else if (event.type == SDL_MOUSEMOTION)
             {
-                camera.onMouseMoved(event.motion.xrel, event.motion.yrel);
+                if (SDL_GetRelativeMouseMode())
+                {
+                    camera.onMouseMoved(event.motion.xrel, event.motion.yrel);
+                }
+            }
+            else if (event.type == SDL_MOUSEBUTTONDOWN)
+            {
+                if (event.button.button == SDL_BUTTON_LEFT)
+                {
+                    SDL_SetRelativeMouseMode(SDL_TRUE);
+                }
             }
         }
 
