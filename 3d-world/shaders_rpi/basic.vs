@@ -1,7 +1,7 @@
 #version 120
 
 attribute vec3 a_position;
-attribute vec4 a_normal;
+attribute vec3 a_normal;
 
 varying vec4 v_color;
 
