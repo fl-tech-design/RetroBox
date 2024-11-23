@@ -6,6 +6,7 @@
 
 #include "libs/glm/glm.hpp"
 #include "libs/glm/ext/matrix_transform.hpp"
+#include "libs/glm/gtc/matrix_transform.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "libs/stb_image.h"
@@ -155,7 +156,12 @@ int main(int argc, char **argv)
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::scale(model, glm::vec3(1.2f));
 
-    int modelMatrixLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_model"));
+    glm::mat4 projection = glm::ortho(-2.0f, 2.0f, -2.0f, 2.0f, -10.0f, 100.0f);
+
+    glm::mat4 modelViewProj = projection * model;
+
+    int modelViewMatrixLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_modelViewProj"));
+    
     // Wireframe
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -169,10 +175,11 @@ int main(int argc, char **argv)
         time += delta;
 
         model = glm::rotate(model, 1.0f * delta, glm::vec3(0, 1, 0));
+        modelViewProj = projection * model;
 
         vertexBuffer.bind();
         indexBuffer.bind();
-        GLCALL(glUniformMatrix4fv(modelMatrixLocation, 1, GL_FALSE, &model[0][0]));
+        GLCALL(glUniformMatrix4fv(modelViewMatrixLocation, 1, GL_FALSE, &modelViewProj[0][0]));
         GLCALL(glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0));
         indexBuffer.unbind();
         vertexBuffer.unbind();
