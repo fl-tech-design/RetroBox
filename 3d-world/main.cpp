@@ -8,9 +8,6 @@
 #include "libs/glm/ext/matrix_transform.hpp"
 #include "libs/glm/gtc/matrix_transform.hpp"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "libs/stb_image.h"
-
 #ifdef _WIN32
 #include <SDL.h>
 #pragma comment(lib, "SDL2.lib")
@@ -24,7 +21,7 @@
 #include "index_buffer.h"
 #include "vertex_buffer.h"
 #include "shader.h"
-#include "camera.h"
+#include "floating_camera.h"
 
 void openGLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam)
 {
@@ -94,7 +91,6 @@ int main(int argc, char **argv)
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetSwapInterval(1);
 
 #ifdef _DEBUG
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
@@ -158,15 +154,13 @@ int main(int argc, char **argv)
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::scale(model, glm::vec3(1.2f));
 
-    Camera camera(90.0f, 800.0f, 480.0f);
+    FloatingCamera camera(90.0f, 800.0f, 600.0f);
     camera.translate(glm::vec3(0.0f, 0.0f, 5.0f));
     camera.update();
 
-    glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -5.0f));
-
     glm::mat4 modelViewProj = camera.getViewProj() * model;
 
-    int modelViewMatrixLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_modelViewProj"));
+    int modelViewProjMatrixLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_modelViewProj"));
 
     // Wireframe
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -175,9 +169,13 @@ int main(int argc, char **argv)
     bool buttonS = false;
     bool buttonA = false;
     bool buttonD = false;
+    bool buttonSpace = false;
+    bool buttonShift = false;
 
+    float cameraSpeed = 6.0f;
     float time = 0.0f;
     bool close = false;
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 
     while (!close)
     {
@@ -204,6 +202,12 @@ int main(int argc, char **argv)
                 case SDLK_d:
                     buttonD = true;
                     break;
+                case SDLK_SPACE:
+                    buttonSpace = true;
+                    break;
+                case SDLK_LSHIFT:
+                    buttonShift = true;
+                    break;
                 }
             }
             else if (event.type == SDL_KEYUP)
@@ -222,29 +226,47 @@ int main(int argc, char **argv)
                 case SDLK_d:
                     buttonD = false;
                     break;
+                case SDLK_SPACE:
+                    buttonSpace = false;
+                    break;
+                case SDLK_LSHIFT:
+                    buttonShift = false;
+                    break;
                 }
+            }
+            else if (event.type == SDL_MOUSEMOTION)
+            {
+                camera.onMouseMoved(event.motion.xrel, event.motion.yrel);
             }
         }
 
-        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         time += delta;
 
         if (buttonW)
         {
-            camera.translate(glm::vec3(0.0f, 0.0f, -2.0f * delta));
+            camera.moveFront(delta * cameraSpeed);
         }
         if (buttonS)
         {
-            camera.translate(glm::vec3(0.0f, 0.0f, 2.0f * delta));
+            camera.moveFront(-delta * cameraSpeed);
         }
         if (buttonA)
         {
-            camera.translate(glm::vec3(-2.0f * delta, 0.0f, 0.0f));
+            camera.moveSideways(-delta * cameraSpeed);
         }
         if (buttonD)
         {
-            camera.translate(glm::vec3(2.0f * delta, 0.0f, 0.0f));
+            camera.moveSideways(delta * cameraSpeed);
+        }
+        if (buttonSpace)
+        {
+            camera.moveUp(delta * cameraSpeed);
+        }
+        if (buttonShift)
+        {
+            camera.moveUp(-delta * cameraSpeed);
         }
 
         camera.update();
@@ -253,7 +275,7 @@ int main(int argc, char **argv)
 
         vertexBuffer.bind();
         indexBuffer.bind();
-        GLCALL(glUniformMatrix4fv(modelViewMatrixLocation, 1, GL_FALSE, &modelViewProj[0][0]));
+		GLCALL(glUniformMatrix4fv(modelViewProjMatrixLocation, 1, GL_FALSE, &modelViewProj[0][0]));
         GLCALL(glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0));
         indexBuffer.unbind();
         vertexBuffer.unbind();
