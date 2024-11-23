@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include "libs/glm/glm.hpp"
 
 typedef int8_t int8;
 typedef int16_t int16;
@@ -16,12 +17,6 @@ typedef double float64;
 
 struct Vertex
 {
-    float32 x;
-    float32 y;
-    float32 z;
-
-    float32 r;
-    float32 g;
-    float32 b;
-    float32 a;
-};     
+    glm::vec3 position;
+    glm::vec3 normal; 
+};
