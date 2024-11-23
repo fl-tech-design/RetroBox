@@ -10,7 +10,5 @@ uniform mat4 u_modelViewProj;
 void main()
 {
     gl_Position = u_modelViewProj * vec4(a_position, 1.0f);
-    //v_color = a_color;
-    v_color = vec4(normalize(a_position), 1.0f);
-
+    v_color = a_color;
 }
