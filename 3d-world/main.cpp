@@ -124,7 +124,7 @@ int main(int argc, char **argv)
     std::vector<uint32> indices;
     uint64 numIndices = 0;
 
-    std::ifstream input = std::ifstream("models/cube.bmf", std::ios::in | std::ios::binary);
+    std::ifstream input = std::ifstream("models/monkey.bmf", std::ios::in | std::ios::binary);
     if (!input.is_open())
     {
         std::cout << "Error reading model file" << std::endl;
@@ -198,7 +198,8 @@ int main(int argc, char **argv)
     float time = 0.0f;
     bool close = false;
     SDL_SetRelativeMouseMode(SDL_TRUE);
-
+    GLCALL(glEnable(GL_CULL_FACE));
+    GLCALL(glEnable(GL_DEPTH_TEST));
     while (!close)
     {
         SDL_Event event;
@@ -276,7 +277,7 @@ int main(int argc, char **argv)
         }
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         time += delta;
 
         if (buttonW)
