@@ -19,6 +19,10 @@ public:
         return viewProj;
     }
 
+    glm::mat4 getView(){
+        return view;
+    }
+
     virtual void update()
     {
         viewProj = projection * view;
