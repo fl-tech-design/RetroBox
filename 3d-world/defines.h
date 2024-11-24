@@ -15,8 +15,8 @@ typedef uint64_t uint64;
 typedef float float32;
 typedef double float64;
 
-struct Vertex
-{
-    glm::vec3 position;
-    glm::vec3 normal; 
+struct Vertex {
+	glm::vec3 position;
+	glm::vec3 normal;
+	glm::vec2 textureCoord;
 };

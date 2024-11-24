@@ -3,35 +3,31 @@
 #include "libs/glm/glm.hpp"
 #include "libs/glm/ext/matrix_transform.hpp"
 
-class Camera
-{
+class Camera {
 public:
-    Camera(float fov, float width, float height)
-    {
-        projection = glm::perspective(fov / 2.0f, width / height, 0.1f, 1000.0f);
+
+    Camera(float fov, float width, float height) {
+        projection = glm::perspective(fov/2.0f, width / height, 0.1f, 1000.0f);
         view = glm::mat4(1.0f);
         position = glm::vec3(0.0f);
         update();
     }
 
-    glm::mat4 getViewProj()
-    {
+    glm::mat4 getViewProj() {
         return viewProj;
     }
 
-    glm::mat4 getView(){
+    glm::mat4 getView() {
         return view;
     }
 
-    virtual void update()
-    {
+    virtual void update() {
         viewProj = projection * view;
     }
 
-    virtual void translate(glm::vec3 v)
-    {
+    virtual void translate(glm::vec3 v) {
         position += v;
-        view = glm::translate(view, v * -1.0f);
+        view = glm::translate(view, v*-1.0f);
     }
 
 protected:

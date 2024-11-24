@@ -2,57 +2,58 @@
 #include <fstream>
 #include <iostream>
 
-Shader::Shader(const char *vertexShaderFilename, const char *fragmentShaderFilename)
-{
+Shader::Shader(const char* vertexShaderFilename, const char* fragmentShaderFilename) {
     shaderId = createShader(vertexShaderFilename, fragmentShaderFilename);
 }
 
-Shader::~Shader()
-{
+Shader::~Shader() {
     glDeleteProgram(shaderId);
 }
 
-void Shader::bind()
-{
+void Shader::bind() {
     glUseProgram(shaderId);
 }
 
-void Shader::unbind()
-{
+void Shader::unbind() {
     glUseProgram(0);
 }
 
-GLuint Shader::compile(std::string shaderSource, GLenum type)
-{
+
+GLuint Shader::compile(std::string shaderSource, GLenum type) {
     GLuint id = glCreateShader(type);
-    const char *src = shaderSource.c_str();
+    const char* src = shaderSource.c_str();
     glShaderSource(id, 1, &src, 0);
     glCompileShader(id);
 
     int result;
     glGetShaderiv(id, GL_COMPILE_STATUS, &result);
-    if (result != GL_TRUE)
-    {
+    if(result != GL_TRUE) {
         int length = 0;
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
-        char *message = new char[length];
+        char* message = new char[length];
         glGetShaderInfoLog(id, length, &length, message);
-        std::cout << "Shader compilation error" << message << std::endl;
+        std::cout << "Shader compilation error: " << message << std::endl;
         delete[] message;
         return 0;
     }
     return id;
 }
 
-std::string Shader::parse(const char *filename)
-{
-    FILE *file;
-    file = fopen(filename, "rb");
-    if (file == nullptr)
-    {
-        std::cout << "File " << filename << "not found" << std::endl;
-        return 0;
-    }
+std::string Shader::parse(const char* filename) {
+    FILE* file;
+#ifdef _WIN32
+	if (fopen_s(&file, filename, "rb") != 0) {
+		std::cout << "File " << filename << " not found" << std::endl;
+		return "";
+	}
+#else
+	file = fopen(filename, "rb");
+	if (file == nullptr) {
+		std::cout << "File " << filename << " not found" << std::endl;
+		return "";
+	}
+#endif
+
     std::string contents;
     fseek(file, 0, SEEK_END);
     size_t filesize = ftell(file);
@@ -65,8 +66,7 @@ std::string Shader::parse(const char *filename)
     return contents;
 }
 
-GLuint Shader::createShader(const char *vertexShaderFilename, const char *fragmentShaderFilename)
-{
+GLuint Shader::createShader(const char* vertexShaderFilename, const char* fragmentShaderFilename) {
     std::string vertexShaderSource = parse(vertexShaderFilename);
     std::string fragmentShaderSource = parse(fragmentShaderFilename);
 
@@ -78,13 +78,13 @@ GLuint Shader::createShader(const char *vertexShaderFilename, const char *fragme
     glAttachShader(program, fs);
     glLinkProgram(program);
 
-#ifdef _RELEASE
+    #ifdef _RELEASE
     glDetachShader(program, vs);
     glDetachShader(program, fs);
 
     glDeleteShader(vs);
     glDeleteShader(fs);
-#endif
+    #endif
 
     return program;
 }

@@ -1,10 +1,8 @@
 #include "camera.h"
 
-class FPSCamera : public Camera
-{
+class FPSCamera : public Camera {
 public:
-    FPSCamera(float fov, float width, float height) : Camera(fov, width, height)
-    {
+    FPSCamera(float fov, float width, float height) : Camera(fov, width, height) {
         up = glm::vec3(0.0f, 1.0f, 0.0f);
         yaw = -90.0f;
         pitch = 0.0f;
@@ -12,13 +10,12 @@ public:
         update();
     }
 
-    void onMouseMoved(float xRel, float yRel)
-    {
+    void onMouseMoved(float xRel, float yRel) {
         yaw += xRel * mouseSensitivity;
         pitch -= yRel * mouseSensitivity;
-        if (pitch > 89.0f)
+        if(pitch > 89.0f)
             pitch = 89.0f;
-        if (pitch < -89.0f)
+        if(pitch < -89.0f)
             pitch = -89.0f;
 
         glm::vec3 front;
@@ -29,20 +26,17 @@ public:
         update();
     }
 
-    void update() override
-    {
-        view = glm::lookAt(position, position + lookAt, up);
+    void update() override {
+        view = glm::lookAt(position, position+lookAt, up);
         viewProj = projection * view;
     }
 
-    void moveFront(float amount)
-    {
-        translate(glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f) * lookAt) * amount);
+    void moveFront(float amount) {
+        translate(glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f)*lookAt) * amount);
         update();
     }
 
-    void moveSideways(float amount)
-    {
+    void moveSideways(float amount) {
         translate(glm::normalize(glm::cross(lookAt, up)) * amount);
         update();
     }
