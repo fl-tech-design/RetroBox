@@ -1,12 +1,26 @@
+# Compiler flags
 CXXARGS = -g -std=c++11 -D _DEBUG
 
-all : opengl_tutorial tools/modelexporter
+# Directories
+SRC_DIR = .
+TOOLS_DIR = tools
+LIBS_DIR = libs
+SHADERS_DIR = shaders
 
-opengl_tutorial : 
-	g++ $(CXXARGS) main.cpp shader.cpp -o opengl_tutorial -lGL -lSDL2 -lGLEW
+# Output binaries
+BIN_DIR = .
 
-tools/modelexporter :
-	g++ $(CXXARGS) tools/modelexporter.cpp -o tools/modelexporter -lassimp
+# Targets
+all: opengl_tutorial tools/modelexporter
 
-clean : 
-	rm opengl_tutorial tools/modelexporter
+# opengl_tutorial target
+opengl_tutorial: $(SRC_DIR)/main.cpp $(SRC_DIR)/shader.cpp
+	g++ $(CXXARGS) $(SRC_DIR)/main.cpp $(SRC_DIR)/shader.cpp -o $(BIN_DIR)/opengl_tutorial -lGL -lSDL2 -lGLEW
+
+# modelexporter target
+tools/modelexporter: $(TOOLS_DIR)/modelexporter.cpp
+	g++ $(CXXARGS) $(TOOLS_DIR)/modelexporter.cpp -o $(BIN_DIR)/tools/modelexporter -lassimp
+
+# Clean up
+clean:
+	rm -f $(BIN_DIR)/opengl_tutorial $(BIN_DIR)/tools/modelexporter

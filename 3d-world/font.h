@@ -23,7 +23,7 @@ struct Font {
         uint8 tmpBitmap[512*512];
 
         fread(ttfBuffer, 1, 1<<20, fopen(filename, "rb"));
-        stbtt_BakeFontBitmap(ttfBuffer, 0, 32.0f, tmpBitmap, 512, 512, 32, 96, cdata);
+        stbtt_BakeFontBitmap(ttfBuffer, 0, 23.0f, tmpBitmap, 512, 512, 32, 96, cdata);
 
         glGenTextures(1, &fontTexture);
         glBindTexture(GL_TEXTURE_2D, fontTexture);

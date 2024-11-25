@@ -1,18 +1,18 @@
 {
+{
     // Use IntelliSense to learn about possible attributes.
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
         {
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/3d-world/main.cpp",
+            "program": "${workspaceFolder}/3d-world/reboxOS",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/3d-world/",
+            "cwd": "${workspaceFolder}/3d-world",
             "environment": [],
             "externalConsole": true,
             "MIMode": "gdb",
@@ -30,7 +30,9 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/3d-world/tools/modelexporter",
-            "args": ["fern.FBX"],
+            "args": [
+                "fern.FBX"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/3d-world/models",
             "environment": [],
