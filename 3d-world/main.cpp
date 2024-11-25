@@ -83,11 +83,14 @@ std::string getShaderPath(const std::string &shaderType)
 	}
 	return "shaders/" + shaderType; // Standardpfad
 }
+bool isFullscreen = isRaspberryPi(); // Auf dem Raspberry Pi Fullscreen aktivieren
+
 #else
 std::string getShaderPath(const std::string &shaderType)
 {
 	return "shaders/" + shaderType; // Standardpfad für Nicht-Linux-Systeme
 }
+bool isFullscreen = false; // Auf anderen Systemen kein Fullscreen
 #endif
 
 int main(int argc, char **argv)
@@ -106,7 +109,7 @@ int main(int argc, char **argv)
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 #endif
 
-	uint32 flags = SDL_WINDOW_OPENGL;
+	uint32 flags = SDL_WINDOW_OPENGL | (isFullscreen ? SDL_WINDOW_FULLSCREEN : 0);
 
 	window = SDL_CreateWindow("RetroBoxOS", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 480, flags);
 	SDL_GLContext glContext = SDL_GL_CreateContext(window);
@@ -322,7 +325,7 @@ int main(int argc, char **argv)
 		framebuffer.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		shader.bind();
-		model = glm::rotate(model, 0.5f * delta, glm::vec3(0, 1, 0));
+		model = glm::rotate(model, 0.25f * delta, glm::vec3(0, 1, 0));
 		modelViewProj = camera.getViewProj() * model;
 		glm::mat4 modelView = camera.getView() * model;
 		glm::mat4 invModelView = glm::transpose(glm::inverse(modelView));
