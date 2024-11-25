@@ -108,7 +108,7 @@ int main(int argc, char **argv)
 
 	uint32 flags = SDL_WINDOW_OPENGL;
 
-	window = SDL_CreateWindow("C++ OpenGL Tutorial", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, flags);
+	window = SDL_CreateWindow("RetroBoxOS", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 480, flags);
 	SDL_GLContext glContext = SDL_GL_CreateContext(window);
 
 	GLenum err = glewInit();
@@ -172,8 +172,8 @@ int main(int argc, char **argv)
 	Font font;
 	font.initFont("fonts/OpenSans-Regular.ttf");
 
-	Model monkey;
-	monkey.init("models/fern.bmf", &shader);
+	Model obj_fern;
+	obj_fern.init("models/fern.bmf", &shader);
 
 	uint64 perfCounterFrequency = SDL_GetPerformanceFrequency();
 	uint64 lastCounter = SDL_GetPerformanceCounter();
@@ -182,8 +182,8 @@ int main(int argc, char **argv)
 	glm::mat4 model = glm::mat4(1.0f);
 	model = glm::scale(model, glm::vec3(0.1f));
 
-	FloatingCamera camera(90.0f, 800.0f, 600.0f);
-	camera.translate(glm::vec3(0.0f, 0.0f, 5.0f));
+	FloatingCamera camera(90.0f, 800.0f, 480.0f);
+	camera.translate(glm::vec3(0.0f, 5.0f, 30.0f));
 	camera.update();
 
 	glm::mat4 modelViewProj = camera.getViewProj() * model;
@@ -191,9 +191,6 @@ int main(int argc, char **argv)
 	int modelViewProjMatrixLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_modelViewProj"));
 	int modelViewLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_modelView"));
 	int invModelViewLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_invModelView"));
-
-	// Wireframe
-	// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	bool buttonW = false;
 	bool buttonS = false;
@@ -291,7 +288,7 @@ int main(int argc, char **argv)
 			}
 		}
 
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		time += delta;
 
@@ -325,7 +322,7 @@ int main(int argc, char **argv)
 		framebuffer.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		shader.bind();
-		model = glm::rotate(model, 1.0f * delta, glm::vec3(0, 1, 0));
+		model = glm::rotate(model, 0.5f * delta, glm::vec3(0, 1, 0));
 		modelViewProj = camera.getViewProj() * model;
 		glm::mat4 modelView = camera.getView() * model;
 		glm::mat4 invModelView = glm::transpose(glm::inverse(modelView));
@@ -341,7 +338,7 @@ int main(int argc, char **argv)
 		GLCALL(glUniformMatrix4fv(modelViewProjMatrixLocation, 1, GL_FALSE, &modelViewProj[0][0]));
 		GLCALL(glUniformMatrix4fv(modelViewLocation, 1, GL_FALSE, &modelView[0][0]));
 		GLCALL(glUniformMatrix4fv(invModelViewLocation, 1, GL_FALSE, &invModelView[0][0]));
-		monkey.render();
+		obj_fern.render();
 		shader.unbind();
 		framebuffer.unbind();
 
@@ -364,10 +361,10 @@ int main(int argc, char **argv)
 		GLCALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 		GLCALL(glDisable(GL_DEPTH_TEST));
 
-		font.drawString(20.0f, 100.0f, "fl-tech & design", &fontShader);
+		font.drawString(20.0f, 460.0f, "fl-tech & design", &fontShader);
 		std::string fpsString = "FPS: ";
 		fpsString.append(std::to_string(FPS));
-		font.drawString(20.0f, 20.0f, fpsString.c_str(), &fontShader);
+		font.drawString(700.0f, 460.0f, fpsString.c_str(), &fontShader);
 
 		fontShader.unbind();
 		GLCALL(glEnable(GL_CULL_FACE));
