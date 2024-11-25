@@ -1,10 +1,10 @@
-#version 330 core
+#version 120
 
-layout(location = 0) in vec3 a_position;
-layout(location = 1) in vec3 a_normal;
+attribute vec3 a_position;
+attribute vec3 a_normal;
 
-out vec3 v_normal;
-out vec3 v_position;
+varying vec3 v_normal;
+varying vec3 v_position;
 
 uniform mat4 u_modelViewProj;
 uniform mat4 u_modelView;

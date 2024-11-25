@@ -6,10 +6,6 @@
 #include <GL/glew.h>
 #define SDL_MAIN_HANDLED
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "libs/stb_image.h"
-#undef STB_IMAGE_IMPLEMENTATION
-
 #include "libs/glm/glm.hpp"
 #include "libs/glm/ext/matrix_transform.hpp"
 #include "libs/glm/gtc/matrix_transform.hpp"
@@ -27,15 +23,15 @@
 
 void _GLGetError(const char *file, int line, const char *call)
 {
-    while (GLenum error = glGetError())
-    {
-        std::cout << "[OpenGL Error] " << glewGetErrorString(error) << " in " << file << ":" << line << " Call: " << call << std::endl;
-    }
+	while (GLenum error = glGetError())
+	{
+		std::cout << "[OpenGL Error] " << glewGetErrorString(error) << " in " << file << ":" << line << " Call: " << call << std::endl;
+	}
 }
 
 #define GLCALL(call) \
-    call;            \
-    _GLGetError(__FILE__, __LINE__, #call)
+	call;            \
+	_GLGetError(__FILE__, __LINE__, #call)
 
 #else
 
@@ -49,12 +45,10 @@ void _GLGetError(const char *file, int line, const char *call)
 #include "shader.h"
 #include "floating_camera.h"
 #include "mesh.h"
-#include "font.h"
-#include "framebuffer.h"
 
 void openGLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam)
 {
-    std::cout << "[OpenGL Error] " << message << std::endl;
+	std::cout << "[OpenGL Error] " << message << std::endl;
 }
 
 #ifdef __linux__
@@ -63,118 +57,83 @@ void openGLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
 
 bool isRaspberryPi()
 {
-    std::ifstream file("/proc/cpuinfo");
-    std::string line;
-    while (std::getline(file, line))
-    {
-        if (line.find("Raspberry Pi") != std::string::npos)
-        {
-            return true;
-        }
-    }
-    return false;
+	std::ifstream file("/proc/cpuinfo");
+	std::string line;
+	while (std::getline(file, line))
+	{
+		if (line.find("Raspberry Pi") != std::string::npos)
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 std::string getShaderPath(const std::string &shaderType)
 {
-    if (isRaspberryPi())
-    {
-        return "shaders_rpi/" + shaderType; // Raspberry Pi spezifischer Pfad
-    }
-    return "shaders/" + shaderType; // Standardpfad
+	if (isRaspberryPi())
+	{
+		return "shaders_rpi/" + shaderType; // Raspberry Pi spezifischer Pfad
+	}
+	return "shaders/" + shaderType; // Standardpfad
 }
 #else
 std::string getShaderPath(const std::string &shaderType)
 {
-    return "shaders/" + shaderType; // Standardpfad für Nicht-Linux-Systeme
+	return "shaders/" + shaderType; // Standardpfad für Nicht-Linux-Systeme
 }
 #endif
 
 int main(int argc, char **argv)
 {
-    SDL_Window *window;
-    SDL_Init(SDL_INIT_EVERYTHING);
+	SDL_Window *window;
+	SDL_Init(SDL_INIT_EVERYTHING);
 
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-#ifdef _DEBUG
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-#endif
-
-    uint32 flags = SDL_WINDOW_OPENGL;
-
-    window = SDL_CreateWindow("C++ OpenGL Tutorial", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, flags);
-    SDL_GLContext glContext = SDL_GL_CreateContext(window);
-
-    GLenum err = glewInit();
-    if (err != GLEW_OK)
-    {
-        std::cout << "Error: " << glewGetErrorString(err) << std::endl;
-        std::cin.get();
-        return -1;
-    }
-    std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
+	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
 #ifdef _DEBUG
-    glEnable(GL_DEBUG_OUTPUT);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    glDebugMessageCallback(openGLDebugCallback, 0);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 #endif
 
-    // Platform-spezifische Shader-Dateipfade holen
-    std::string vertexShaderPath = getShaderPath("basic.vs");
-    std::string fragmentShaderPath = getShaderPath("basic.fs");
+	uint32 flags = SDL_WINDOW_OPENGL;
 
-    // Ausgabe der Shader-Pfade
-    std::cout << "Vertex Shader Path: " << vertexShaderPath << std::endl;
-    std::cout << "Fragment Shader Path: " << fragmentShaderPath << std::endl;
+	window = SDL_CreateWindow("C++ OpenGL Tutorial", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, flags);
+	SDL_GLContext glContext = SDL_GL_CreateContext(window);
 
-    // Shader laden
-	Shader fontShader("shaders_old/font.vs", "shaders_old/font.fs");
-    Shader shader(vertexShaderPath.c_str(), fragmentShaderPath.c_str());
-	Shader postprocessingShader("shaders_old/postprocess.vs", "shaders_old/postprocess.fs");
-    shader.bind();
+	GLenum err = glewInit();
+	if (err != GLEW_OK)
+	{
+		std::cout << "Error: " << glewGetErrorString(err) << std::endl;
+		std::cin.get();
+		return -1;
+	}
+	std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
 
-	int directionLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_directional_light.direction"));
-	glm::vec3 sunColor = glm::vec3(0.0f);
-	glm::vec3 sunDirection = glm::vec3(-1.0f);
-	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_directional_light.diffuse"), 1, (float*)&sunColor.data));
-	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_directional_light.specular"), 1, (float*)&sunColor.data));
-	sunColor *= 0.4f;
-	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_directional_light.ambient"), 1, (float*)&sunColor.data));
+#ifdef _DEBUG
+	glEnable(GL_DEBUG_OUTPUT);
+	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+	glDebugMessageCallback(openGLDebugCallback, 0);
+#endif
 
-	glm::vec3 pointLightColor = glm::vec3(0.0f, 0.0f, 0.0f);
-	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_point_light.diffuse"), 1, (float*)&pointLightColor.data));
-	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_point_light.specular"), 1, (float*)&pointLightColor.data));
-	pointLightColor *= 0.2f;
-	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_point_light.ambient"), 1, (float*)&pointLightColor.data));
-	GLCALL(glUniform1f(glGetUniformLocation(shader.getShaderId(), "u_point_light.linear"), 0.027f));
-	GLCALL(glUniform1f(glGetUniformLocation(shader.getShaderId(), "u_point_light.quadratic"), 0.0028f));
-	glm::vec4 pointLightPosition = glm::vec4(0.0f, 0.0f, 10.0f, 1.0f);
-	int positionLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_point_light.position"));
+	// Platform-spezifische Shader-Dateipfade holen
+	std::string vertexShaderPath = getShaderPath("basic.vs");
+	std::string fragmentShaderPath = getShaderPath("basic.fs");
 
-	glm::vec3 spotLightColor = glm::vec3(1.0f);
-	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_spot_light.diffuse"), 1, (float*)&spotLightColor.data));
-	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_spot_light.specular"), 1, (float*)&spotLightColor.data));
-	spotLightColor *= 0.2f;
-	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_spot_light.ambient"), 1, (float*)&spotLightColor.data));
-	glm::vec3 spotLightPosition = glm::vec3(0.0f);
-	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_spot_light.position"), 1, (float*)&spotLightPosition.data));
-	spotLightPosition.z = 1.0f;
-	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_spot_light.direction"), 1, (float*)&spotLightPosition.data));
-	GLCALL(glUniform1f(glGetUniformLocation(shader.getShaderId(), "u_spot_light.innerCone"), 0.95f));
-	GLCALL(glUniform1f(glGetUniformLocation(shader.getShaderId(), "u_spot_light.outerCone"), 0.80f));
-	
-	Font font;
-	font.initFont("fonts/OpenSans-Regular.ttf");
+	// Ausgabe der Shader-Pfade
+	std::cout << "Vertex Shader Path: " << vertexShaderPath << std::endl;
+	std::cout << "Fragment Shader Path: " << fragmentShaderPath << std::endl;
+
+	// Shader laden
+	Shader shader(vertexShaderPath.c_str(), fragmentShaderPath.c_str());
+	shader.bind();
 
 	Model monkey;
-	monkey.init("models/fern.bmf", &shader);
+	monkey.init("models/tree.bmf", &shader);
 
 	uint64 perfCounterFrequency = SDL_GetPerformanceFrequency();
 	uint64 lastCounter = SDL_GetPerformanceCounter();
@@ -194,7 +153,7 @@ int main(int argc, char **argv)
 	int invModelViewLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_invModelView"));
 
 	// Wireframe
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	bool buttonW = false;
 	bool buttonS = false;
@@ -206,72 +165,80 @@ int main(int argc, char **argv)
 	float cameraSpeed = 6.0f;
 	float time = 0.0f;
 	bool close = false;
-	uint32 FPS = 0;
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 	GLCALL(glEnable(GL_CULL_FACE));
 	GLCALL(glEnable(GL_DEPTH_TEST));
-
-	Framebuffer framebuffer;
-	int w, h;
-	SDL_GetWindowSize(window, &w, &h);
-	framebuffer.create(w, h);
-
-	while(!close) {
+	while (!close)
+	{
 		SDL_Event event;
-		while(SDL_PollEvent(&event)) {
-			if(event.type == SDL_QUIT) {
+		while (SDL_PollEvent(&event))
+		{
+			if (event.type == SDL_QUIT)
+			{
 				close = true;
-			} else if(event.type == SDL_KEYDOWN) {
-				switch(event.key.keysym.sym) {
-					case SDLK_w:
+			}
+			else if (event.type == SDL_KEYDOWN)
+			{
+				switch (event.key.keysym.sym)
+				{
+				case SDLK_w:
 					buttonW = true;
 					break;
-					case SDLK_s:
+				case SDLK_s:
 					buttonS = true;
 					break;
-					case SDLK_a:
+				case SDLK_a:
 					buttonA = true;
 					break;
-					case SDLK_d:
+				case SDLK_d:
 					buttonD = true;
 					break;
-					case SDLK_SPACE:
+				case SDLK_SPACE:
 					buttonSpace = true;
 					break;
-					case SDLK_LSHIFT:
+				case SDLK_LSHIFT:
 					buttonShift = true;
 					break;
-					case SDLK_ESCAPE:
+				case SDLK_ESCAPE:
 					SDL_SetRelativeMouseMode(SDL_FALSE);
 					break;
 				}
-			} else if(event.type == SDL_KEYUP) {
-				switch(event.key.keysym.sym)  {
-					case SDLK_w:
+			}
+			else if (event.type == SDL_KEYUP)
+			{
+				switch (event.key.keysym.sym)
+				{
+				case SDLK_w:
 					buttonW = false;
 					break;
-					case SDLK_s:
+				case SDLK_s:
 					buttonS = false;
 					break;
-					case SDLK_a:
+				case SDLK_a:
 					buttonA = false;
 					break;
-					case SDLK_d:
+				case SDLK_d:
 					buttonD = false;
 					break;
-					case SDLK_SPACE:
+				case SDLK_SPACE:
 					buttonSpace = false;
 					break;
-					case SDLK_LSHIFT:
+				case SDLK_LSHIFT:
 					buttonShift = false;
 					break;
 				}
-			} else if(event.type == SDL_MOUSEMOTION) {
-				if(SDL_GetRelativeMouseMode()) {
+			}
+			else if (event.type == SDL_MOUSEMOTION)
+			{
+				if (SDL_GetRelativeMouseMode())
+				{
 					camera.onMouseMoved(event.motion.xrel, event.motion.yrel);
 				}
-			} else if(event.type == SDL_MOUSEBUTTONDOWN) {
-				if(event.button.button == SDL_BUTTON_LEFT) {
+			}
+			else if (event.type == SDL_MOUSEBUTTONDOWN)
+			{
+				if (event.button.button == SDL_BUTTON_LEFT)
+				{
 					SDL_SetRelativeMouseMode(SDL_TRUE);
 				}
 			}
@@ -281,84 +248,50 @@ int main(int argc, char **argv)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		time += delta;
 
-		if(buttonW) {
+		if (buttonW)
+		{
 			camera.moveFront(delta * cameraSpeed);
 		}
-		if(buttonS) {
+		if (buttonS)
+		{
 			camera.moveFront(-delta * cameraSpeed);
-		}if(buttonA) {
+		}
+		if (buttonA)
+		{
 			camera.moveSideways(-delta * cameraSpeed);
-		}if(buttonD) {
+		}
+		if (buttonD)
+		{
 			camera.moveSideways(delta * cameraSpeed);
-		}if(buttonSpace) {
+		}
+		if (buttonSpace)
+		{
 			camera.moveUp(delta * cameraSpeed);
-		}if(buttonShift) {
+		}
+		if (buttonShift)
+		{
 			camera.moveUp(-delta * cameraSpeed);
 		}
 
 		camera.update();
-
-		framebuffer.bind();
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		shader.bind();
-		model = glm::rotate(model, 1.0f*delta, glm::vec3(0, 1, 0));
+		model = glm::rotate(model, 1.0f * delta, glm::vec3(0, 1, 0));
 		modelViewProj = camera.getViewProj() * model;
 		glm::mat4 modelView = camera.getView() * model;
 		glm::mat4 invModelView = glm::transpose(glm::inverse(modelView));
-		
-		glm::vec4 transformedSunDirection = glm::transpose(glm::inverse(camera.getView())) * glm::vec4(sunDirection, 1.0f);
-		glUniform3fv(directionLocation, 1, (float*)&transformedSunDirection.data);
-
-		glm::mat4 pointLightMatrix = glm::rotate(glm::mat4(1.0f), -delta, {0.0f, 1.0f, 0.0f});
-		pointLightPosition = pointLightMatrix * pointLightPosition;
-		glm::vec3 transformedPointLightPosition = (glm::vec3) (camera.getView() * pointLightPosition);
-		glUniform3fv(positionLocation, 1, (float*)&transformedPointLightPosition.data);
 
 		GLCALL(glUniformMatrix4fv(modelViewProjMatrixLocation, 1, GL_FALSE, &modelViewProj[0][0]));
 		GLCALL(glUniformMatrix4fv(modelViewLocation, 1, GL_FALSE, &modelView[0][0]));
 		GLCALL(glUniformMatrix4fv(invModelViewLocation, 1, GL_FALSE, &invModelView[0][0]));
 		monkey.render();
-		shader.unbind();
-		framebuffer.unbind();
-
-		// Postprocessing
-		postprocessingShader.bind();
-		GLCALL(glActiveTexture(GL_TEXTURE0));
-		GLCALL(glBindTexture(GL_TEXTURE_2D, framebuffer.getTextureId()));
-		GLCALL(glUniform1i(glGetUniformLocation(postprocessingShader.getShaderId(), "u_texture"), 0));
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-		postprocessingShader.unbind();
-
-		fontShader.bind();
-
-		int w, h;
-		SDL_GetWindowSize(window, &w, &h);
-		glm::mat4 ortho = glm::ortho(0.0f, (float)w, (float)h, 0.0f);
-		GLCALL(glUniformMatrix4fv(glGetUniformLocation(fontShader.getShaderId(), "u_modelViewProj"), 1, GL_FALSE, &ortho[0][0]));
-		GLCALL(glDisable(GL_CULL_FACE));
-		GLCALL(glEnable(GL_BLEND));
-		GLCALL(glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-		GLCALL(glDisable(GL_DEPTH_TEST));
-
-		font.drawString(20.0f, 20.0f, "fl-tech & design", &fontShader);
-		std::string fpsString = "FPS: ";
-		fpsString.append(std::to_string(FPS));
-		font.drawString(20.0f, 40.0f, fpsString.c_str(), &fontShader);
-
-		fontShader.unbind();
-		GLCALL(glEnable(GL_CULL_FACE));
-		GLCALL(glEnable(GL_DEPTH_TEST));
 
 		SDL_GL_SwapWindow(window);
 
 		uint64 endCounter = SDL_GetPerformanceCounter();
 		uint64 counterElapsed = endCounter - lastCounter;
 		delta = ((float32)counterElapsed) / (float32)perfCounterFrequency;
-		FPS = (uint32)((float32)perfCounterFrequency / (float32)counterElapsed);
+		uint32 FPS = (uint32)((float32)perfCounterFrequency / (float32)counterElapsed);
 		lastCounter = endCounter;
 	}
-
-	framebuffer.destroy();
 
 	return 0;
 }
