@@ -8,7 +8,7 @@
             "type": "shell",
             "command": "g++",
             "args": [
-                "-g", "-std=c++11", "main.cpp", "shader.cpp", "-o", "opengl_tutorial", "-D", "_DEBUG", "-lGL", "-lSDL2", "-lGLEW"
+                "-g", "-std=c++11", "3d-world/main.cpp", "3d-world/shader.cpp", "-o", "3d-world/reboxOS", "-D", "_DEBUG", "-lGL", "-lSDL2", "-lGLEW"
             ],
             "group": {
                 "kind": "build",
@@ -20,7 +20,7 @@
             "type": "shell",
             "command": "g++",
             "args": [
-                "-g", "-std=c++11", "tools/modelexporter.cpp", "-o", "tools/modelexporter", "-D", "_DEBUG", "-lassimp"
+                "-g", "-std=c++11", "3d-world/tools/modelexporter.cpp", "-o", "3d-world/tools/modelexporter", "-D", "_DEBUG", "-lassimp"
             ],
             "group": {
                 "kind": "build",
