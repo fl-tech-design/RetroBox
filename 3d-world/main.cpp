@@ -73,7 +73,7 @@ std::string getShaderPath(const std::string &shaderType)
 {
 	if (isRaspberryPi())
 	{
-		return "shaders_rpi/" + shaderType; // Raspberry Pi spezifischer Pfad
+		return "shaders_old/" + shaderType; // Raspberry Pi spezifischer Pfad
 	}
 	return "shaders/" + shaderType; // Standardpfad
 }
